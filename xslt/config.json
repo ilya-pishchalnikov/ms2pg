@@ -1,0 +1,16 @@
+{
+    "configurations": [
+      {
+        "type": "xslt",
+        "request": "launch",
+        "name": "Debug XSLT File",
+        "xslPath": "${workspaceFolder}/ms2pg.xslt",
+        "sourcePath": "${workspaceFolder}/dbo.BO_Language.xml",
+        "destinationPath": "${workspaceFolder}/dbo.BO_Language_t.xml",
+        "parameters": {
+          "theseAreOptional": true,
+          "andCanBeOmmittedIfYou": "do not use them"
+        }
+      }
+    ]
+  }
