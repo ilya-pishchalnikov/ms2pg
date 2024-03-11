@@ -13,6 +13,12 @@
         <xsl:when test="local-name() = 'CreateTableStatement'">
           <xsl:apply-templates select = "." />
         </xsl:when>
+        <xsl:when test="local-name() = 'UpdateStatisticsStatement'">
+          <xsl:apply-templates select = "." />
+        </xsl:when>
+        <xsl:when test="local-name() = 'AlterTableAddTableElementStatement'">
+          <xsl:apply-templates select = "." />
+        </xsl:when>
         <xsl:otherwise>
           <xsl:call-template name ="_UnknownToken" />
         </xsl:otherwise>
@@ -34,5 +40,12 @@
       </xsl:otherwise>
     </xsl:choose>
     <xsl:text>*/</xsl:text>
+  </xsl:template>  
+
+  <!-- Update statistics (Analyze) statement -->
+  <xsl:template match="UpdateStatisticsStatement">
+    <xsl:text>ANALYZE </xsl:text>
+    <xsl:apply-templates select="SchemaObjectName" />
   </xsl:template>
+
 </xsl:stylesheet>

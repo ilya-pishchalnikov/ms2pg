@@ -5,6 +5,8 @@
   <xsl:import href="common.xslt" />
   <xsl:import href="createtable.xslt" />
   <xsl:import href="statements.xslt" />
+  <xsl:import href="datatypes.xslt" />
+  <xsl:import href="altertable.xslt" />
   
   
   <xsl:output omit-xml-declaration="yes" indent="yes"/>
@@ -18,6 +20,5 @@
       <xsl:call-template name="_LineBreak"/>
     </xsl:for-each>
   </xsl:template> 
- 
   
 </xsl:stylesheet>

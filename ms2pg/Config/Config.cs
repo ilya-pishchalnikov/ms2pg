@@ -27,7 +27,7 @@ namespace ms2pg.Config
                         throw new ApplicationException($"Свойства (property) в файле '{configFileName}' должны содержать атрибуты name и value либо variable (Чувствительно к регистру)");
                     }
                     if (value == null) {
-                        value = System.Environment.GetEnvironmentVariable(variable);
+                        value = System.Environment.GetEnvironmentVariable(variable!);
                         if (value == null) {
                             throw new ApplicationException($"Environvent variable '{variable}' not found");
                         }

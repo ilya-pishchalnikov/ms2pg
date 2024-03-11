@@ -9,19 +9,14 @@
 
   <ItemGroup>
     <None Remove="config.xml" />
-    <None Remove="MsParser\xslt\SqlNullStatementParse.xslt" />
     <None Remove="PgScripter\xslt\common.xslt" />
     <None Remove="PgScripter\xslt\createtable.xslt" />
     <None Remove="PgScripter\xslt\ms2pg.xslt" />
     <None Remove="PgScripter\xslt\settings.xslt" />
-    <None Remove="PgScripter\xslt\sqlnullstatement.xslt" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="config.xml">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="MsParser\xslt\SqlNullStatementParse.xslt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="PgScripter\xslt\common.xslt">
@@ -34,9 +29,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="PgScripter\xslt\settings.xslt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="PgScripter\xslt\sqlnullstatement.xslt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
   </ItemGroup>
