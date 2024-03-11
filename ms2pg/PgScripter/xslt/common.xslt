@@ -11,7 +11,7 @@
     <xsl:call-template name="_LineBreak" />
     <xsl:text>/********************** UNKNOWN TOKEN '</xsl:text>
     <xsl:value-of select="local-name()" />
-    <xsl:text>'**********************/;</xsl:text>
+    <xsl:text>'**********************/</xsl:text>
     <xsl:call-template
       name="_LineBreak" />
   </xsl:template>
@@ -49,6 +49,7 @@
     </xsl:if>
   </xsl:template>  
 
+  <!-- Expression -->
   <xsl:template match="Expression">
     <xsl:if test="not(@Value)">
       <xsl:text>(</xsl:text>

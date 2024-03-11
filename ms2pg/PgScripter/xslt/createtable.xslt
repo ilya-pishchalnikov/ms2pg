@@ -13,6 +13,8 @@
     <xsl:apply-templates select="Definition" />
   </xsl:template>   
 
+  <!-- TODO: inline index creation while table creating -->
+  
   <!-- Table columns definition -->
   <xsl:template match="Definition">
     <xsl:text>(</xsl:text>
@@ -26,13 +28,15 @@
       <xsl:apply-templates select="."/>
       <xsl:call-template name ="_LineBreak" />
     </xsl:for-each>
-    <xsl:apply-templates select="SqlPrimaryKeyConstraint"/>
+    <xsl:if test="TableConstraints/node()">
+      <xsl:text>,</xsl:text>
+      <xsl:apply-templates select="TableConstraints"/>
+    </xsl:if>
     <xsl:call-template name = "_IndentDec" />
     <xsl:text>)</xsl:text>
     <xsl:call-template name = "_IndentDec" />
   </xsl:template>
 
-  
   <!-- Table column definition -->
   <xsl:template match="ColumnDefinition">
     <xsl:value-of select="ColumnIdentifier/@Value" />
@@ -40,33 +44,6 @@
     <xsl:apply-templates select="DataType"/>
     <xsl:text> </xsl:text>
     <xsl:apply-templates select="Constraints"/>
-  </xsl:template>
-
-  <!-- Описание первичного ключа -->
-  <xsl:template match="SqlPrimaryKeyConstraint">
-    <xsl:text>,</xsl:text>
-    <xsl:if test="SqlIdentifier">
-      <xsl:text>CONSTRAINT </xsl:text>
-      <xsl:apply-templates select="SqlIdentifier"/>
-      <xsl:text> </xsl:text>
-    </xsl:if>
-    <xsl:text>PRIMARY KEY </xsl:text>
-    <!-- xsl:choose>
-      <xsl:when test="@ClusterOption = 'Clustered'">
-        <xsl:text>CLUSTERED </xsl:text>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:call-template name ="_UnknownToken" />
-      </xsl:otherwise>
-    </xsl:choose -->
-    <xsl:text>(</xsl:text>
-    <xsl:for-each select="SqlIndexedColumn">
-      <xsl:if test="position() > 1">
-        <xsl:text>, </xsl:text>
-      </xsl:if>
-      <xsl:apply-templates select="."/>
-    </xsl:for-each>
-    <xsl:text>)&#10;</xsl:text>
   </xsl:template>
 
   <!-- Indexed column -->

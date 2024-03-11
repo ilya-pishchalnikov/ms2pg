@@ -15,8 +15,11 @@
   <!-- Alter table add constraints -->
   <xsl:template match="TableConstraints">
     <xsl:choose>
-      <xsl:when test="'./DefaultConstraintDefinition'">
+      <xsl:when test="DefaultConstraintDefinition">
         <xsl:apply-templates select="DefaultConstraintDefinition" />
+      </xsl:when>
+      <xsl:when test="UniqueConstraintDefinition">
+        <xsl:apply-templates select="UniqueConstraintDefinition" />
       </xsl:when>
       <!-- TODO: Other constraints definitions -->
       <xsl:otherwise>
@@ -32,5 +35,30 @@
     <xsl:text> SET DEFAULT </xsl:text>
     <xsl:apply-templates select="./Expression" />
   </xsl:template>
+
+    <!-- Unique constraint -->
+    <xsl:template match="UniqueConstraintDefinition">
+      <xsl:apply-templates select="ConstraintIdentifier" />
+      <xsl:choose>
+        <xsl:when test="@IsPrimaryKey='True'">
+          <xsl:text>PRIMARY KEY </xsl:text>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:text>UNIQUE </xsl:text>
+        </xsl:otherwise>
+      </xsl:choose>
+      <xsl:text>(</xsl:text>
+      <xsl:value-of select="Columns/ColumnWithSortOrder/Column/MultiPartIdentifier/Identifiers/Identifier/@Value"></xsl:value-of>
+      <xsl:text>)</xsl:text>
+      <xsl:call-template name="_LineBreak" />
+
+    </xsl:template>
+
+    <!-- Constraint explicitly name -->
+    <xsl:template match="ConstraintIdentifier">
+      <xsl:text>CONSTRAINT </xsl:text>
+      <xsl:value-of select="./@Value" />   
+      <xsl:text> </xsl:text>     
+    </xsl:template>
 
 </xsl:stylesheet>
