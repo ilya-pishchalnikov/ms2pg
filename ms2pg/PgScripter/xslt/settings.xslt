@@ -6,7 +6,7 @@
   <xsl:variable name="skip_dbo_in_object_identifiers" select="true()" />
   <xsl:variable name="create_table_if_not_exists" select="true()" />
 
-  <!-- Переменные для преобразования регистра -->
+  <!-- Case changing variables -->
   <xsl:variable name="lowercase" select="'abcdefghijklmnopqrstuvwxyz'" />
   <xsl:variable name="uppercase" select="'ABCDEFGHIJKLMNOPQRSTUVWXYZ'" />
   

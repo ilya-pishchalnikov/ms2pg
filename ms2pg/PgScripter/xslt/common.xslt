@@ -49,13 +49,13 @@
     <xsl:call-template name = "_LineBreak" />
   </xsl:template>
 
-  <!-- Тип данных-->
+  <!-- Data type -->
   <xsl:template match="DataType">
     <xsl:variable name="datatype">
       <xsl:apply-templates select="@SqlDataTypeOption" />
     </xsl:variable>
     <xsl:choose >
-      <xsl:when test="boolean(ancestor::SqlColumnDefinition/SqlColumnIdentity)">SERIAL</xsl:when>
+      <xsl:when test="boolean(ancestor::ColumnDefinition/IdentityOptions)">SERIAL</xsl:when>
       <xsl:when test="translate($datatype, $lowercase, $uppercase)='BIGINT'">BIGINT</xsl:when>
       <xsl:when test="translate($datatype, $lowercase, $uppercase)='BINARY'">BYTEA</xsl:when>
       <xsl:when test="translate($datatype, $lowercase, $uppercase)='VARBINARY'">BYTEA</xsl:when>
