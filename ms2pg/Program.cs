@@ -12,7 +12,7 @@ namespace ms2pg
             ObjectsScripter.ScriptAllObjects(config);
             ObjectsParser.ParseFiles(config);
             PgScripter.PgScripter.pgScript(config);
-            //PgDeploy.PgDeploy.Deploy(config);
+            PgDeploy.PgDeploy.Deploy(config);
         }
     }
 }

@@ -39,7 +39,7 @@
     <xsl:text> </xsl:text>
     <xsl:apply-templates select="DataType"/>
     <xsl:text> </xsl:text>
-    <xsl:apply-templates select="Constraints"/>>
+    <xsl:apply-templates select="Constraints"/>
   </xsl:template>
 
   <!-- Описание первичного ключа -->
@@ -69,18 +69,27 @@
     <xsl:text>)&#10;</xsl:text>
   </xsl:template>
 
-  <!-- колонка в индексе -->
+  <!-- Indexed column -->
   <xsl:template match="SqlIndexedColumn">
     <xsl:apply-templates select="SqlIdentifier"/>
   </xsl:template>
 
+    <!-- Nullable constraint definition -->
+    <xsl:template match="NullableConstraintDefinition">
+      <xsl:if test="@Nullable='True'">
+        <xsl:text>NULL</xsl:text>
+      </xsl:if>
+      <xsl:if test="@Nullable='False'">
+        <xsl:text>NOT NULL</xsl:text>
+      </xsl:if>
+    </xsl:template>
 
-  <!-- Описание ограничения столбца -->
+  <!-- Column constraints definitions -->
   <xsl:template match="Constraints">
-    <xsl:for-each select=".">
+    <xsl:for-each select="*">
         <xsl:choose>
         <xsl:when test="local-name() = 'NullableConstraintDefinition'">
-          <xsl:text>NULL</xsl:text>
+          <xsl:apply-templates select="." />
         </xsl:when>
         <xsl:otherwise>
           <xsl:text>/*Not recognized constraint type:  "</xsl:text>

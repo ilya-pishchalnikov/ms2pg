@@ -52,7 +52,7 @@
   <!-- Data type -->
   <xsl:template match="DataType">
     <xsl:variable name="datatype">
-      <xsl:apply-templates select="@SqlDataTypeOption" />
+      <xsl:apply-templates select="Name/Identifiers/Identifier/@Value" />
     </xsl:variable>
     <xsl:choose >
       <xsl:when test="boolean(ancestor::ColumnDefinition/IdentityOptions)">SERIAL</xsl:when>
