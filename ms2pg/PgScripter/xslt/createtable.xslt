@@ -5,28 +5,21 @@
   <xsl:import href="common.xslt"/>
   <xsl:import href="settings.xslt"/>
 
-  <!-- Стейтмент создания таблицы
-  <xsl:template match="SqlCreateTableStatement">
+   <!-- Create table statement -->
+  <xsl:template match="CreateTableStatement">
     <xsl:text>CREATE TABLE </xsl:text>
     <xsl:if test = "$create_table_if_not_exists">IF NOT EXISTS </xsl:if>
-    <xsl:choose>
-      <xsl:when test="SqlObjectIdentifier">
-        <xsl:apply-templates select="SqlObjectIdentifier"/>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:call-template name="_UnknownToken" />
-      </xsl:otherwise>
-    </xsl:choose>
-    <xsl:apply-templates select="SqlTableDefinition" />
-  </xsl:template> -->
+    <xsl:apply-templates select="SchemaObjectName"/>
+    <xsl:apply-templates select="Definition" />
+  </xsl:template>   
 
-  <!-- Описание столбцов таблицы -->
-  <xsl:template match="SqlTableDefinition">
+  <!-- Table columns definition -->
+  <xsl:template match="Definition">
     <xsl:text>(</xsl:text>
     <xsl:call-template name ="_LineBreak" />
     <xsl:call-template name = "_IndentInc" />
     <xsl:call-template name = "_IndentInc" />
-    <xsl:for-each select="SqlColumnDefinition">
+    <xsl:for-each select="ColumnDefinitions/ColumnDefinition">
       <xsl:if test="position() > 1">
         <xsl:text>,</xsl:text>
       </xsl:if>
@@ -37,6 +30,16 @@
     <xsl:call-template name = "_IndentDec" />
     <xsl:text>)</xsl:text>
     <xsl:call-template name = "_IndentDec" />
+  </xsl:template>
+
+  
+  <!-- Table column definition -->
+  <xsl:template match="ColumnDefinition">
+    <xsl:value-of select="ColumnIdentifier/@Value" />
+    <xsl:text> </xsl:text>
+    <xsl:apply-templates select="DataType"/>
+    <!--xsl:text> </xsl:text>
+    <xsl:apply-templates select="SqlConstraint"/-->
   </xsl:template>
 
   <!-- Описание первичного ключа -->
@@ -71,14 +74,6 @@
     <xsl:apply-templates select="SqlIdentifier"/>
   </xsl:template>
 
-  <!-- Описание столбца таблицы -->
-  <xsl:template match="SqlColumnDefinition">
-    <xsl:apply-templates select="SqlIdentifier"/>
-    <xsl:text> </xsl:text>
-    <xsl:apply-templates select="SqlDataTypeSpecification"/>
-    <xsl:text> </xsl:text>
-    <xsl:apply-templates select="SqlConstraint"/>
-  </xsl:template>
 
   <!-- Описание ограничения столбца -->
   <xsl:template match="SqlConstraint">

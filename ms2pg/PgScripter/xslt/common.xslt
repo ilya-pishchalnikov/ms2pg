@@ -50,9 +50,9 @@
   </xsl:template>
 
   <!-- Тип данных-->
-  <xsl:template match="SqlDataType">
+  <xsl:template match="DataType">
     <xsl:variable name="datatype">
-      <xsl:apply-templates select="SqlObjectIdentifier" />
+      <xsl:apply-templates select="@SqlDataTypeOption" />
     </xsl:variable>
     <xsl:choose >
       <xsl:when test="boolean(ancestor::SqlColumnDefinition/SqlColumnIdentity)">SERIAL</xsl:when>
@@ -85,7 +85,9 @@
       <xsl:when test="translate($datatype, $lowercase, $uppercase)='DATETIMEOFFSET'">TIMESTAMPTZ</xsl:when>
       <xsl:when test="translate($datatype, $lowercase, $uppercase)='SMALLDATETIME'">TIMESTAMP(0)</xsl:when>
       <xsl:when test="translate($datatype, $lowercase, $uppercase)='XML'">XML</xsl:when>
-      <xsl:otherwise>$datatype</xsl:otherwise>
+      <xsl:otherwise>
+        <xsl:value-of select="$datatype" />
+      </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
 
