@@ -38,8 +38,8 @@
     <xsl:value-of select="ColumnIdentifier/@Value" />
     <xsl:text> </xsl:text>
     <xsl:apply-templates select="DataType"/>
-    <!--xsl:text> </xsl:text>
-    <xsl:apply-templates select="SqlConstraint"/-->
+    <xsl:text> </xsl:text>
+    <xsl:apply-templates select="Constraints"/>>
   </xsl:template>
 
   <!-- Описание первичного ключа -->
@@ -76,20 +76,20 @@
 
 
   <!-- Описание ограничения столбца -->
-  <xsl:template match="SqlConstraint">
-    <xsl:choose>
-      <xsl:when test="@Type = 'Null'">
-        <xsl:text>NULL</xsl:text>
-      </xsl:when>
-      <xsl:when test="@Type = 'NotNull'">
-        <xsl:text>NOT NULL</xsl:text>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:text>/*Not recognized constraint type:  "</xsl:text>
-        <xsl:value-of select="@Type"/>
-        <xsl:text>*/</xsl:text>
-      </xsl:otherwise>
-    </xsl:choose>
+  <xsl:template match="Constraints">
+    <xsl:for-each select=".">
+        <xsl:choose>
+        <xsl:when test="local-name() = 'NullableConstraintDefinition'">
+          <xsl:text>NULL</xsl:text>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:text>/*Not recognized constraint type:  "</xsl:text>
+          <xsl:value-of select="local-name()"/>
+          <xsl:text>*/</xsl:text>
+        </xsl:otherwise>
+      </xsl:choose>
+    </xsl:for-each>
+    
   </xsl:template>
 
 
