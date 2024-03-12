@@ -38,20 +38,19 @@ namespace ms2pg.MsParser
         {
             Console.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}\tparsing\t{fileName} => {Path.ChangeExtension(fileName, ".xml")}");
 
-
-            // var parseOptions = new ParseOptions
-            // {
-            //     TransactSqlVersion = TransactSqlVersion.Current
-            // };
-            // var parseResult = Parser.Parse(File.ReadAllText(fileName, Encoding.UTF8), parseOptions);
-
             var sqlParser = new Microsoft.SqlServer.TransactSql.ScriptDom.TSql160Parser(true);
-
 
             var textReaderSql = new StringReader(File.ReadAllText(fileName, Encoding.UTF8));
             IList<ParseError> parseErrors = null!;
 
             var parseResult = sqlParser.Parse(textReaderSql,out parseErrors);
+
+            if (parseErrors != null && parseErrors.Count > 0) {
+                var parseErrorsString = parseErrors
+                    .Select(err => $"[file: {fileName} line:{err.Line}, col:{err.Column}] {err.Message}")
+                    .Aggregate((msg1, msg2) => msg1 + "\n" + msg2);
+                throw new ApplicationException ($"Errors while file parsing: \n {parseErrorsString}");
+            }
             
             var serializer = new ms2pg.MsParser.XmlSerializer ();
             serializer.IsDebugMessages = config["is-debug-messages"] == "true";

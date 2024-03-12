@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
-<!-- Alter table add statement -->
+  <!-- Alter table add statement -->
   <xsl:template match="AlterTableAddTableElementStatement">
     <xsl:text>ALTER TABLE </xsl:text>
     <xsl:apply-templates select="SchemaObjectName" />
@@ -19,6 +19,9 @@
         <xsl:apply-templates select="DefaultConstraintDefinition" />
       </xsl:when>
       <xsl:when test="UniqueConstraintDefinition">
+        <xsl:if test="ancestor::AlterTableAddTableElementStatement">
+          <xsl:text>ADD </xsl:text>
+        </xsl:if>
         <xsl:apply-templates select="UniqueConstraintDefinition" />
       </xsl:when>
       <!-- TODO: Other constraints definitions -->
