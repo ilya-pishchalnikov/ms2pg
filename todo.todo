@@ -1,0 +1,11 @@
+xslt:
+    - create index statement support
+    - alter table add/alter column syntax support
+    - alter table add index syntax support
+    - TableConstraints - add another constraints
+    - add check if primary key exists
+
+    
+
+
+

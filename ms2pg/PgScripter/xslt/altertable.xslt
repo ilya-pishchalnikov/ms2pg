@@ -3,11 +3,37 @@
 
   <!-- Alter table add statement -->
   <xsl:template match="AlterTableAddTableElementStatement">
+    <xsl:variable name="if_exists" select="Definition/TableConstraints/UniqueConstraintDefinition[@IsPrimaryKey='True']
+    and $create_primary_key_if_not_exists" />
+    <xsl:if test="$if_exists">      
+      <xsl:call-template name="_DoBegin" />
+      <xsl:text>IF NOT EXISTS (</xsl:text>
+      <xsl:call-template name="_IndentInc" />
+      <xsl:call-template name="_IndentInc" />
+      <xsl:call-template name="_LineBreak" />
+      <xsl:text>SELECT *</xsl:text>
+      <xsl:call-template name="_LineBreak" />
+      <xsl:text>FROM information_schema.table_constraints</xsl:text>
+      <xsl:call-template name="_LineBreak" />
+      <xsl:text>WHERE table_name = LOWER('</xsl:text>
+      <xsl:apply-templates select="SchemaObjectName" />
+      <xsl:text>')</xsl:text>
+      <xsl:call-template name="_IndentInc" />
+      <xsl:call-template name="_LineBreak" />
+      <xsl:text> AND constraint_type = 'PRIMARY KEY') THEN</xsl:text>
+      <xsl:call-template name="_IndentDec" />
+      <xsl:call-template name="_IndentDec" />
+      <xsl:call-template name="_LineBreak" />
+    </xsl:if>
     <xsl:text>ALTER TABLE </xsl:text>
     <xsl:apply-templates select="SchemaObjectName" />
     <xsl:text> </xsl:text>
     <xsl:apply-templates select="Definition/TableConstraints" />
-    <!-- TODO: Constraints definitions -->
+    <xsl:if test="$if_exists">
+      <xsl:call-template name="_IndentDec" />
+      <xsl:text>;END IF;</xsl:text>
+      <xsl:call-template name="_DoEnd" />
+    </xsl:if>
     <!-- TODO: Column definitions -->
     <!-- TODO: Indexes -->
   </xsl:template>
