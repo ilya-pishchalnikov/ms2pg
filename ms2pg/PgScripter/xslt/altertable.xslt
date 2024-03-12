@@ -50,6 +50,12 @@
         </xsl:if>
         <xsl:apply-templates select="UniqueConstraintDefinition" />
       </xsl:when>
+      <xsl:when test="ForeignKeyConstraintDefinition">
+        <xsl:if test="ancestor::AlterTableAddTableElementStatement">
+          <xsl:text>ADD </xsl:text>
+        </xsl:if>
+        <xsl:apply-templates select="ForeignKeyConstraintDefinition" />
+      </xsl:when>     
       <!-- TODO: Other constraints definitions -->
       <xsl:otherwise>
         <xsl:call-template name="_UnknownToken" />
@@ -80,8 +86,35 @@
       <xsl:value-of select="Columns/ColumnWithSortOrder/Column/MultiPartIdentifier/Identifiers/Identifier/@Value"></xsl:value-of>
       <xsl:text>)</xsl:text>
       <xsl:call-template name="_LineBreak" />
-
     </xsl:template>
+
+
+  <!-- Foreign key constraint -->
+  <xsl:template match="ForeignKeyConstraintDefinition">
+    <xsl:text>FOREIGN KEY (</xsl:text>
+    <xsl:apply-templates select="./Columns/Identifier" />   
+    <xsl:text>) REFERENCES </xsl:text>
+    <xsl:apply-templates select="ReferenceTableName/Identifiers" />
+  </xsl:template>
+
+    <!-- Identifiers -->
+    <xsl:template match="Identifiers">
+      <xsl:for-each select="Identifier">
+      <xsl:if test="position()>1">
+          <xsl:text>_</xsl:text>
+        </xsl:if>
+        <xsl:apply-templates select="." />
+      </xsl:for-each>
+    </xsl:template>
+
+
+    <!-- Identifier -->
+    <xsl:template match="Identifier">
+        <xsl:value-of select="@Value"></xsl:value-of>
+    </xsl:template>
+
+  
+
 
     <!-- Constraint explicitly name -->
     <xsl:template match="ConstraintIdentifier">
