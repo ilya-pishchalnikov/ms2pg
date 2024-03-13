@@ -6,86 +6,150 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Xsl;
+using Microsoft.VisualBasic;
 
 namespace ms2pg.PgScripter
 {
     internal partial class MsParsedToPgXsltTransform
     {
-        public static string GenerateScript(string xmlFileName, string xsltFileName, string outputFileName)
+        /// <summary>
+        /// Generates Postgre Sql script from xml file with parsed MS SQL script
+        /// </summary>
+        /// <param name="xmlFileName"></param>
+        /// <param name="xsltFileName"></param>
+        /// <param name="outputFileName"></param>
+        /// <param name="config"></param>
+        /// <returns></returns>
+        public static void GenerateScript(string xmlFileName, string xsltFileName, string outputFileName, Config.Config config)
         {
-
-            var xslt = new XslCompiledTransform();
-            var xsltSettings = new XsltSettings(true, true);
-
-            var xsltArguments = new XsltArgumentList();
-            xsltArguments.AddExtensionObject("urn:custom", new XsltExtensionFunctions());
-
-            xslt.Load(xsltFileName, xsltSettings, new XmlUrlResolver());
-            //Execute the XSLT transform.
-            using (var outputStream = new FileStream(outputFileName, FileMode.Create))
+            try 
             {
+                var xslt = new XslCompiledTransform();
+                var xsltSettings = new XsltSettings(true, true);
 
-                xslt.Transform(xmlFileName, xsltArguments, outputStream);
+                var xsltArguments = new XsltArgumentList();
+                xsltArguments.AddExtensionObject("urn:custom", new XsltExtensionFunctions());
 
-            }
-
-            var rawScriptText = File.ReadAllText(outputFileName);
-
-            var postProcessedText = PostProcess(rawScriptText);
-            File.WriteAllText(outputFileName, postProcessedText);
-            return postProcessedText;
-        }
-
-        private static string PostProcess (string rawScriptText)
-        {
-            var output = new StringBuilder();
-            var indent = 0;
-            var tokens = TokensRegex().Matches(rawScriptText).Select(match => match.Value);
-            foreach (var token in tokens)
-            {
-                var isFirstSymbolInLine = true;
-                switch(token)
+                xslt.Load(xsltFileName, xsltSettings, new XmlUrlResolver());
+                //Execute the XSLT transform.
+                using (var outputStream = new FileStream(outputFileName, FileMode.Create))
                 {
-                    case "{{Indent++}}":
-                        indent += 4;
-                        break;
-                    case "{{Indent--}}":
-                        indent -= 4;
-                        if (indent < 0) { indent = 0; }
-                        break;
-                    case "\r\n":
-                    case "\n\r":
-                    case "\n":
-                    case "\r":
-                        output.Append(token);
-                        isFirstSymbolInLine = true;
-                        break;
-                    default:
-                        if (CustomIndentDeltaRegex().Match(token).Value.Length > 0)
-                        {
-                            var indentDeltaStr = CustomIndentDeltaParse().Replace(token, "$1$2");
-                            indent += int.Parse(indentDeltaStr);
-                            if (indent < 0) { indent = 0; }
-                            break;
-                        }
-                        if (isFirstSymbolInLine) { output.Append(new string(' ', indent)); }
-                        output.Append(token);
-                        break;
+
+                    xslt.Transform(xmlFileName, xsltArguments, outputStream);
+
+                }
+
+                var rawScriptText = File.ReadAllText(outputFileName);
+
+                var IndentedText = PostProcessIndents(rawScriptText);
+                
+                var statementsToAfterScript = config["statements-to-after-script"].Split(",").ToList();
+                var postProcessedScript = new StringBuilder();
+                var postProcessedAfterScript = new StringBuilder();
+                PostProcessStatements(IndentedText, statementsToAfterScript, out postProcessedScript, out postProcessedAfterScript);
+                File.WriteAllText(outputFileName, postProcessedScript.ToString());
+                var afterScriptFilePath = Path.Combine(config["pg-after-script-dir"], Path.GetFileName(outputFileName));
+                if (postProcessedAfterScript.Length > 0) 
+                {
+                    File.WriteAllText(afterScriptFilePath, postProcessedAfterScript.ToString());
                 }
             }
-
-            return output.ToString();
+            catch (Exception ex)
+            {
+                throw new ApplicationException($"Error while translating file {xmlFileName} into Postgre SQL.", ex);
+            }
+            
         }
 
-        [GeneratedRegex("({{Indent\\+\\+}}|{{Indent--}}|{{Indent\\+=\\d+}}|{{Indent-=\\d+}}|\\r\\n|\\n\\r|\\r|\\n|[^\\r\\n{]+)")]
-        private static partial Regex TokensRegex();
+        private static string PostProcessIndents (string rawScriptText)
+        {
+            // Increments processing
+            var processedIndents = new StringBuilder();
+            var indent = 0;
+            //var tokensIndents = IndentsRegex().Matches(rawScriptText).Select(match =>match.Value).ToList();
+            var tokens = IndentsRegex().Split(rawScriptText).ToList();
+            foreach (var token in tokens) 
+            {
+                 switch(token)
+                    {
+                        case "{{Indent++}}":
+                            indent += 4;
+                            break;
+                        case "{{Indent--}}":
+                            indent -= 4;
+                            if (indent < 0) { indent = 0; }
+                            break;
+                        case "\r\n":
+                        case "\n\r":
+                        case "\n":
+                        case "\r":
+                            processedIndents.Append(token);
+                            processedIndents.Append(new string(' ', indent));
+                            break;
+                        default:
+                            processedIndents.Append(token);
+                            break;
+                    }
+            }
+
+            return processedIndents.ToString();
+        }
+        /// <summary>
+        /// Не поддерживает вложенность выносимых в пособработку стейтментов
+        /// </summary>
+        /// <param name="rawScriptText"></param>
+        /// <param name="statementsToAfterScript"></param>
+        /// <param name="script"></param>
+        /// <param name="afterScript"></param>
+        private static void PostProcessStatements (string rawScriptText, List<string> statementsToAfterScript, out StringBuilder script, out StringBuilder afterScript)
+        {         
+            var tokensStatements = StatementBeginEndRegEx().Split(rawScriptText.ToString());
+            var isAfterScript = false;
+            script = new StringBuilder();
+            afterScript = new StringBuilder();
+
+            foreach (var token in tokensStatements)
+            {
+                string statementName = string.Empty;
+                if (token.StartsWith("{{StatementBegin:"))
+                {
+                    statementName = token.Split(":")[1];
+                    statementName = statementName.Substring(0,statementName.Length - 2);
+                    isAfterScript = statementsToAfterScript.Contains(statementName);
+                }
+                else if (token.StartsWith("{{StatementEnd:"))
+                {                    
+                    statementName = token.Split(":")[1];
+                    statementName = statementName.Substring(0,statementName.Length - 2);
+                    if (statementsToAfterScript.Contains(statementName)) {
+                        isAfterScript = false;
+                    }
+                }
+                else
+                {
+                    if (isAfterScript) {                        
+                        afterScript.Append(token);
+                    }
+                    else {
+                        script.Append(token);
+                    }
+                }
+            }
+        }
+
+        [GeneratedRegex("({{Indent\\+\\+}}|{{Indent--}}|\\r\\n|\\n\\r|\\r|\\n)")]
+        private static partial Regex IndentsRegex();
+        
+
+        [GeneratedRegex("({{StatementBegin:[^}]+}}|{{StatementEnd:[^}]+}})")]
+        private static partial Regex StatementBeginEndRegEx ();
+        
+
+        [GeneratedRegex("{{StatementBegin:[^}]+}}")]
+        private static partial Regex StatementBeginRegEx ();
 
 
-        [GeneratedRegex("{{Indent(-|/+)=(/d+)}}")]
-        private static partial Regex CustomIndentDeltaRegex();
-
-
-        [GeneratedRegex("{{Indent(-|/+)=(/d+)}}")]
-        private static partial Regex CustomIndentDeltaParse();
+        [GeneratedRegex("{{StatementEnd:[^}]+}}")]
+        private static partial Regex StatementEndRegEx ();
     }
 }

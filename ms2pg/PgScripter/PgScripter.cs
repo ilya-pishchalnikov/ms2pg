@@ -22,7 +22,7 @@ namespace ms2pg.PgScripter
                 Console.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}\tgenerating sql\t{file.XmlFileName} => {file.OutputFileName}");
                 var OutputDirectoryName = Path.GetDirectoryName(file.OutputFileName);
                 if (!Directory.Exists(OutputDirectoryName)) { Directory.CreateDirectory(OutputDirectoryName!); }
-                MsParsedToPgXsltTransform.GenerateScript(file.XmlFileName, xsltFileName, file.OutputFileName);
+                MsParsedToPgXsltTransform.GenerateScript(file.XmlFileName, xsltFileName, file.OutputFileName, config);
             }
 
         }

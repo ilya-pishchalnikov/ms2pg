@@ -18,9 +18,9 @@
   <!-- Table columns definition -->
   <xsl:template match="Definition">
     <xsl:text>(</xsl:text>
+    <xsl:call-template name = "_IndentInc" />
+    <xsl:call-template name = "_IndentInc" />
     <xsl:call-template name ="_LineBreak" />
-    <xsl:call-template name = "_IndentInc" />
-    <xsl:call-template name = "_IndentInc" />
     <xsl:for-each select="ColumnDefinitions/ColumnDefinition">
       <xsl:if test="position() > 1">
         <xsl:text>,</xsl:text>

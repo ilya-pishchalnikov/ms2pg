@@ -12,18 +12,31 @@
     <xsl:text>/********************** UNKNOWN TOKEN '</xsl:text>
     <xsl:value-of select="local-name()" />
     <xsl:text>'**********************/</xsl:text>
-    <xsl:call-template
-      name="_LineBreak" />
+    <xsl:call-template name="_LineBreak" />
   </xsl:template>
 
-  <!-- Увеличить отступ -->
+  <!-- Increment indent -->
   <xsl:template name="_IndentInc">
     <xsl:text>{{Indent++}}</xsl:text>
   </xsl:template>
 
-  <!-- Уменьшить отступ -->
+  <!-- Decrement indent -->
   <xsl:template name="_IndentDec">
     <xsl:text>{{Indent--}}</xsl:text>
+  </xsl:template>
+
+  <!-- Statement begin mark -->
+  <xsl:template name="_StatementBegin">
+    <xsl:text>{{StatementBegin:</xsl:text>
+    <xsl:value-of select="local-name()" />
+    <xsl:text>}}</xsl:text>
+  </xsl:template>
+
+  <!-- Statement end mark -->
+  <xsl:template name="_StatementEnd">
+    <xsl:text>{{StatementEnd:</xsl:text>
+    <xsl:value-of select="local-name()" />
+    <xsl:text>}}</xsl:text>
   </xsl:template>
 
   <!-- Перенос строки -->
@@ -80,8 +93,6 @@
     </xsl:if>
     <xsl:value-of select="@Value" />
   </xsl:template>
-
-
- 
+   
 
 </xsl:stylesheet>

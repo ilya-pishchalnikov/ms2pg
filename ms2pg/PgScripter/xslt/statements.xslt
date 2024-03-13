@@ -3,6 +3,7 @@
  <!-- Statements choose -->
   <xsl:template name="_Statements">
     <xsl:for-each select="Statements/*">
+      <xsl:call-template name="_StatementBegin" />
       <xsl:choose>
         <xsl:when test="local-name() = 'UseStatement'">
           <xsl:text>/*USE STATEMENT*/</xsl:text>
@@ -24,6 +25,7 @@
         </xsl:otherwise>
       </xsl:choose>
       <xsl:call-template name="_EndOfStatement" />
+      <xsl:call-template name="_StatementEnd" />
     </xsl:for-each>
   </xsl:template>
   

@@ -6,6 +6,7 @@
   <xsl:variable name="skip_dbo_in_object_identifiers" select="true()" />
   <xsl:variable name="create_table_if_not_exists" select="true()" />
   <xsl:variable name="create_primary_key_if_not_exists" select="true()" />
+  <xsl:variable name="move_alter_table_to_postprocess" select="true()" />
 
   <!-- Case changing variables -->
   <xsl:variable name="lowercase" select="'abcdefghijklmnopqrstuvwxyz'" />

@@ -4,7 +4,7 @@
   <!-- Alter table add statement -->
   <xsl:template match="AlterTableAddTableElementStatement">
     <xsl:variable name="if_exists" select="Definition/TableConstraints/UniqueConstraintDefinition[@IsPrimaryKey='True']
-    and $create_primary_key_if_not_exists" />
+      and $create_primary_key_if_not_exists" />
     <xsl:if test="$if_exists">      
       <xsl:call-template name="_DoBegin" />
       <xsl:text>IF NOT EXISTS (</xsl:text>
