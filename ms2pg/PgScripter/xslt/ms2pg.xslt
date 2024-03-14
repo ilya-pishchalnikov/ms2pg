@@ -7,6 +7,7 @@
   <xsl:import href="statements.xslt" />
   <xsl:import href="datatypes.xslt" />
   <xsl:import href="altertable.xslt" />
+  <xsl:import href="createindex.xslt" />
   
   
   <xsl:output omit-xml-declaration="yes" indent="yes"/>
