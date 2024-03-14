@@ -5,6 +5,7 @@ xslt:
     + alter table add foreign key support (without dependencies check) 
     + figure out how to account for dependencies
     + create index statement support
+    - create filtered index statement support
     - alter table add/alter column syntax support
     - alter table add index syntax support
     - TableConstraints - add another constraints

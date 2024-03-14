@@ -83,15 +83,25 @@
       <xsl:value-of select="BaseIdentifier/@Value" />
     </xsl:if>
   </xsl:template>  
-
   <!-- Expression -->
-  <xsl:template match="Expression">
-    <xsl:if test="not(@Value)">
-      <xsl:text>(</xsl:text>
-        <xsl:apply-templates select="Expression" />
-      <xsl:text>)</xsl:text>
-    </xsl:if>
-    <xsl:value-of select="@Value" />
+  <xsl:template match="Expression|FirstExpression|SecondExpression">
+    <xsl:choose>
+      <xsl:when test="@ComparisonType='GreaterThan'">
+        <xsl:apply-templates select="FirstExpression" />
+        <xsl:text> &gt; </xsl:text>
+        <xsl:apply-templates select="SecondExpression" />
+      </xsl:when>
+      <xsl:when test="@ColumnType='Regular'">
+        <xsl:apply-templates select="MultiPartIdentifier" />
+      </xsl:when>
+      <xsl:when test="not(@Value)">
+        <xsl:text>(</xsl:text>
+          <xsl:apply-templates select="Expression" />
+        <xsl:text>)</xsl:text></xsl:when>
+      <xsl:otherwise>
+      <xsl:value-of select="@Value" />
+    </xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
 
   <!-- MultiPartIdentifier -->

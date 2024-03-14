@@ -8,9 +8,10 @@
   <xsl:import href="datatypes.xslt" />
   <xsl:import href="altertable.xslt" />
   <xsl:import href="createindex.xslt" />
+  <xsl:import href="createview.xslt" />
   
   
-  <xsl:output omit-xml-declaration="yes" indent="yes"/>
+  <xsl:output method="text" omit-xml-declaration="yes"/>
   
   <!-- =================================== ТОЧКА ВХОДА =================================== -->
   <xsl:template match="/">
