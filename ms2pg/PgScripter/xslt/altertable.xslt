@@ -97,25 +97,6 @@
     <xsl:apply-templates select="ReferenceTableName/Identifiers" />
   </xsl:template>
 
-    <!-- Identifiers -->
-    <xsl:template match="Identifiers">
-      <xsl:for-each select="Identifier">
-      <xsl:if test="position()>1">
-          <xsl:text>_</xsl:text>
-        </xsl:if>
-        <xsl:apply-templates select="." />
-      </xsl:for-each>
-    </xsl:template>
-
-
-    <!-- Identifier -->
-    <xsl:template match="Identifier">
-        <xsl:value-of select="@Value"></xsl:value-of>
-    </xsl:template>
-
-  
-
-
     <!-- Constraint explicitly name -->
     <xsl:template match="ConstraintIdentifier">
       <xsl:text>CONSTRAINT </xsl:text>

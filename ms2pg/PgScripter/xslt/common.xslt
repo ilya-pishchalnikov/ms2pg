@@ -60,8 +60,8 @@
     <xsl:call-template name="_IndentInc" />
   </xsl:template>
 
-   <!-- end of code block -->
-   <xsl:template name="_DoEnd">
+    <!-- end of code block -->
+  <xsl:template name="_DoEnd">
     <xsl:call-template name="_LineBreak" />
     <xsl:call-template name="_IndentDec" />
     <xsl:text>END;</xsl:text>
@@ -93,6 +93,27 @@
     </xsl:if>
     <xsl:value-of select="@Value" />
   </xsl:template>
-   
+
+  <!-- MultiPartIdentifier -->
+  <xsl:template match="MultiPartIdentifier">
+    <xsl:apply-templates select="Identifiers" />
+  </xsl:template>
+
+  <!-- Identifiers -->
+  <xsl:template match="Identifiers">
+    <xsl:for-each select="Identifier">
+      <xsl:if test="position()>1">
+        <xsl:text>_</xsl:text>
+      </xsl:if>
+      <xsl:apply-templates select="." />
+    </xsl:for-each>
+  </xsl:template>
+
+
+  <!-- Identifier -->
+  <xsl:template match="Identifier">
+    <xsl:value-of select="@Value"></xsl:value-of>
+  </xsl:template>
+
 
 </xsl:stylesheet>

@@ -20,6 +20,9 @@
         <xsl:when test="local-name() = 'AlterTableAddTableElementStatement'">
           <xsl:apply-templates select = "." />
         </xsl:when>
+        <xsl:when test="local-name() = 'CreateIndexStatement'">
+          <xsl:apply-templates select = "." />
+        </xsl:when>
         <xsl:otherwise>
           <xsl:call-template name ="_UnknownToken" />
         </xsl:otherwise>
@@ -49,5 +52,31 @@
     <xsl:text>ANALYZE </xsl:text>
     <xsl:apply-templates select="SchemaObjectName" />
   </xsl:template>
+
+    <!-- Update statistics (Analyze) statement -->
+    <xsl:template match="CreateIndexStatement">
+      <xsl:text>CREATE </xsl:text>
+      <xsl:if test="@Unique='True'">
+        <xsl:text>UNIQUE </xsl:text>
+      </xsl:if>
+      <xsl:text>INDEX IF NOT EXISTS </xsl:text>
+      <xsl:value-of select="Name/@Value"></xsl:value-of>
+      <xsl:text> ON </xsl:text>
+      <xsl:apply-templates select="OnName/Identifiers" />
+      <xsl:text>(</xsl:text>
+      <xsl:for-each select="Columns/ColumnWithSortOrder">
+        <xsl:if test="position()>1">
+          <xsl:text>, </xsl:text>
+        </xsl:if>
+        <xsl:apply-templates select="Column/MultiPartIdentifier" />        
+        <xsl:if test="@SortOrder='Ascending'">
+          <xsl:text> ASC</xsl:text>
+        </xsl:if>
+        <xsl:if test="@SortOrder='Descending'">
+          <xsl:text> DESC</xsl:text>
+        </xsl:if>
+      </xsl:for-each>
+      <xsl:text>)</xsl:text>
+    </xsl:template>
 
 </xsl:stylesheet>

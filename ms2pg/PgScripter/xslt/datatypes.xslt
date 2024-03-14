@@ -5,7 +5,7 @@
   <!-- Data type -->
   <xsl:template match="DataType">
     <xsl:variable name="datatype">
-      <xsl:apply-templates select="Name/Identifiers/Identifier/@Value" />
+      <xsl:apply-templates select="Name/Identifiers" />
     </xsl:variable>
     <xsl:variable name="pgType">
       <xsl:choose>
