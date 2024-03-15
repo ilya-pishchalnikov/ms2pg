@@ -23,6 +23,9 @@
         <xsl:when test="local-name() = 'CreateIndexStatement'">
           <xsl:apply-templates select = "." />
         </xsl:when>
+        <xsl:when test="local-name() = 'CreateViewStatement'">
+          <xsl:apply-templates select = "." />
+        </xsl:when>
         <xsl:otherwise>
           <xsl:call-template name ="_UnknownToken" />
         </xsl:otherwise>

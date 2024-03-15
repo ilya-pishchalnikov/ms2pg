@@ -84,20 +84,44 @@
     </xsl:if>
   </xsl:template>  
   <!-- Expression -->
-  <xsl:template match="Expression|FirstExpression|SecondExpression">
+  <xsl:template match="Expression|FirstExpression|SecondExpression|SearchCondition|ColumnReferenceExpression">
     <xsl:choose>
       <xsl:when test="@ComparisonType='GreaterThan'">
         <xsl:apply-templates select="FirstExpression" />
         <xsl:text> &gt; </xsl:text>
         <xsl:apply-templates select="SecondExpression" />
       </xsl:when>
+      <xsl:when test="@ComparisonType='Equals'">
+        <xsl:apply-templates select="FirstExpression" />
+        <xsl:text> = </xsl:text>
+        <xsl:apply-templates select="SecondExpression" />
+      </xsl:when>
       <xsl:when test="@ColumnType='Regular'">
         <xsl:apply-templates select="MultiPartIdentifier" />
+      </xsl:when>
+      <xsl:when test="FunctionName">
+        <xsl:choose>
+          <xsl:when test="FunctionName/@Value = 'isnull'">
+            <xsl:text>coalesce</xsl:text>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:value-of select="FunctionName/@Value" />
+          </xsl:otherwise>  
+        </xsl:choose>
+        <xsl:text>(</xsl:text>
+        <xsl:for-each select="Parameters/ColumnReferenceExpression">
+          <xsl:if test="position()>1">
+            <xsl:text>, </xsl:text>
+          </xsl:if>
+          <xsl:apply-templates select="." />
+        </xsl:for-each>
+        <xsl:text>)</xsl:text>
       </xsl:when>
       <xsl:when test="not(@Value)">
         <xsl:text>(</xsl:text>
           <xsl:apply-templates select="Expression" />
-        <xsl:text>)</xsl:text></xsl:when>
+        <xsl:text>)</xsl:text>
+      </xsl:when>
       <xsl:otherwise>
       <xsl:value-of select="@Value" />
     </xsl:otherwise>

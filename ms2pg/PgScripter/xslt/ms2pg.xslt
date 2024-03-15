@@ -9,6 +9,7 @@
   <xsl:import href="altertable.xslt" />
   <xsl:import href="createindex.xslt" />
   <xsl:import href="createview.xslt" />
+  <xsl:import href="select.xslt" />
   
   
   <xsl:output method="text" omit-xml-declaration="yes"/>
