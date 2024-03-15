@@ -17,17 +17,25 @@
   <xsl:template match="SelectElements">
     <xsl:text>SELECT </xsl:text>
     <xsl:call-template name="_IndentInc" />
-    <xsl:call-template name="_LineBreak" />    
-    <xsl:for-each select="SelectScalarExpression">
-        <xsl:if test="position() > 1">
-            <xsl:call-template name="_LineBreak" />
-            <xsl:text>,</xsl:text>
-        </xsl:if>
-        <xsl:apply-templates select="Expression" />
-        <xsl:if test="ColumnName/node()">
-          <xsl:text> AS </xsl:text>
-          <xsl:apply-templates select="ColumnName/Identifier" />
-        </xsl:if>
+    <xsl:call-template name="_LineBreak" /> 
+    <xsl:for-each select="*">
+      <xsl:if test="position() > 1">
+        <xsl:call-template name="_LineBreak" />
+        <xsl:text>,</xsl:text>
+      </xsl:if>
+      <xsl:choose>
+        <xsl:when test="local-name()='SelectScalarExpression'">
+          <xsl:apply-templates select="Expression" />
+        </xsl:when>
+        <xsl:when test="local-name()='SelectStarExpression'">
+          <xsl:text>*</xsl:text>
+        </xsl:when>
+        <xsl:otherwise></xsl:otherwise>
+      </xsl:choose>
+      <xsl:if test="ColumnName/node()">
+        <xsl:text> AS </xsl:text>
+        <xsl:apply-templates select="ColumnName/Identifier" />
+      </xsl:if>
     </xsl:for-each>
     <xsl:call-template name="_IndentDec" />
     <xsl:call-template name="_LineBreak" />
@@ -52,18 +60,40 @@
             <xsl:when test="UnqualifiedJoin">
               <xsl:apply-templates select="UnqualifiedJoin" />
             </xsl:when>
+            <xsl:when test="NamedTableReference">
+              <xsl:for-each select="NamedTableReference">
+                <xsl:if test="position() > 1">
+                  <xsl:text>, </xsl:text>
+                </xsl:if>
+                <xsl:apply-templates select="SchemaObject" />
+                <xsl:if test="Alias">
+                  <xsl:text> AS </xsl:text>
+                  <xsl:value-of select="Alias/@Value"></xsl:value-of>
+                </xsl:if>
+              </xsl:for-each>
+            </xsl:when>
             <xsl:otherwise>
               <xsl:text>/*UNKNOWN TABLE REFERENCE*/</xsl:text>
             </xsl:otherwise>
           </xsl:choose>
-          
       </xsl:for-each>
     </xsl:template>
 
     <xsl:template match="NamedTableReference|FirstTableReference|SecondTableReference">
-      <xsl:choose>
+     <xsl:choose>
         <xsl:when test="SchemaObject">
           <xsl:apply-templates select="SchemaObject" />
+        </xsl:when>
+        <xsl:when test="QueryExpression">
+          <xsl:text>(</xsl:text>
+          <xsl:call-template name="_IndentInc" />
+          <xsl:call-template name="_IndentInc" />
+          <xsl:call-template name="_LineBreak" />
+          <xsl:apply-templates select="QueryExpression" />
+          <xsl:call-template name="_IndentDec" />
+          <xsl:call-template name="_LineBreak" />
+          <xsl:text>)</xsl:text>
+          <xsl:call-template name="_IndentDec" />
         </xsl:when>
         <xsl:otherwise>
           <xsl:text>/*Unknown table reference*/</xsl:text>

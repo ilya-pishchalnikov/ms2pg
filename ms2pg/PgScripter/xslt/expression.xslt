@@ -48,6 +48,17 @@
         <xsl:value-of select="@Value"></xsl:value-of>
         <xsl:text>'</xsl:text>
       </xsl:when>
+      <xsl:when test="QueryExpression">
+        <xsl:text>(</xsl:text>
+        <xsl:call-template name="_IndentInc" />
+        <xsl:call-template name="_IndentInc" />
+        <xsl:call-template name="_LineBreak" />
+        <xsl:apply-templates select="QueryExpression" />
+        <xsl:call-template name="_IndentDec" />
+        <xsl:call-template name="_LineBreak" />
+        <xsl:text>)</xsl:text>
+        <xsl:call-template name="_IndentDec" />
+      </xsl:when>
       <xsl:when test="FunctionName">
         <xsl:choose>
           <xsl:when test="FunctionName/@Value = 'isnull'">
