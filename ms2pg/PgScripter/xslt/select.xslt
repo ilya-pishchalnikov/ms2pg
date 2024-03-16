@@ -11,6 +11,8 @@
     <xsl:apply-templates select="SelectElements" />
     <xsl:apply-templates select="FromClause" />
     <xsl:apply-templates select="WhereClause" />
+    <xsl:apply-templates select="GroupByClause" />
+    <xsl:apply-templates select="HavingClause" />
   </xsl:template>  
 
   <!-- Select clause -->
@@ -50,6 +52,30 @@
       <xsl:call-template name="_IndentDec" />
       <xsl:call-template name="_LineBreak" />
     </xsl:template>
+
+    <!-- Group by clause -->
+    <xsl:template match="GroupByClause">
+      <xsl:text>GROUP BY </xsl:text>
+      <xsl:call-template name="_IndentInc" />
+      <xsl:call-template name="_LineBreak" /> 
+      <xsl:for-each select="GroupingSpecifications">
+        <xsl:if test="position() > 1">
+          <xsl:call-template name="_LineBreak" />
+          <xsl:text>,</xsl:text>
+        </xsl:if>
+        <xsl:apply-templates select="ExpressionGroupingSpecification/Expression" />
+      </xsl:for-each>
+      <xsl:call-template name="_IndentDec" />
+      <xsl:call-template name="_LineBreak" />
+    </xsl:template>
+
+
+    <!-- Having clause -->
+    <xsl:template match="HavingClause">
+      <xsl:text>HAVING </xsl:text>
+      <xsl:apply-templates select="SearchCondition" />
+    </xsl:template>
+    
 
     <xsl:template match="TableReferences">
       <xsl:for-each select=".">

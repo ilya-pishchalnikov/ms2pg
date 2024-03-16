@@ -13,7 +13,7 @@
     </xsl:if>
   </xsl:template>  
   <!-- Expression -->
-  <xsl:template match="Expression|FirstExpression|SecondExpression|SearchCondition|ColumnReferenceExpression">
+  <xsl:template match="Expression|FirstExpression|SecondExpression|SearchCondition|ColumnReferenceExpression|BinaryExpression">
   <xsl:choose>
       <xsl:when test="@ColumnType='Regular'">
         <xsl:apply-templates select="MultiPartIdentifier" />
@@ -43,6 +43,11 @@
         <xsl:text> + </xsl:text>
         <xsl:apply-templates select="SecondExpression" />
       </xsl:when>
+      <xsl:when test="@BinaryExpressionType='Multiply'">
+        <xsl:apply-templates select="FirstExpression" />
+        <xsl:text> * </xsl:text>
+        <xsl:apply-templates select="SecondExpression" />
+      </xsl:when>
       <xsl:when test="@LiteralType='String'">
         <xsl:text>'</xsl:text>
         <xsl:value-of select="@Value"></xsl:value-of>
@@ -69,7 +74,7 @@
           </xsl:otherwise>  
         </xsl:choose>
         <xsl:text>(</xsl:text>
-        <xsl:for-each select="Parameters/ColumnReferenceExpression">
+        <xsl:for-each select="Parameters/.">
           <xsl:if test="position()>1">
             <xsl:text>, </xsl:text>
           </xsl:if>
