@@ -40,27 +40,32 @@
 
   <!-- Alter table add constraints -->
   <xsl:template match="TableConstraints">
-    <xsl:choose>
-      <xsl:when test="DefaultConstraintDefinition">
-        <xsl:apply-templates select="DefaultConstraintDefinition" />
-      </xsl:when>
-      <xsl:when test="UniqueConstraintDefinition">
-        <xsl:if test="ancestor::AlterTableAddTableElementStatement">
-          <xsl:text>ADD </xsl:text>
-        </xsl:if>
-        <xsl:apply-templates select="UniqueConstraintDefinition" />
-      </xsl:when>
-      <xsl:when test="ForeignKeyConstraintDefinition">
-        <xsl:if test="ancestor::AlterTableAddTableElementStatement">
-          <xsl:text>ADD </xsl:text>
-        </xsl:if>
-        <xsl:apply-templates select="ForeignKeyConstraintDefinition" />
-      </xsl:when>     
-      <!-- TODO: Other constraints definitions -->
-      <xsl:otherwise>
-        <xsl:call-template name="_UnknownToken" />
-      </xsl:otherwise>
-    </xsl:choose>
+    <xsl:for-each select="*">
+      <xsl:if test="position() > 1">
+        <xsl:text>,</xsl:text>
+      </xsl:if>
+      <xsl:choose>
+        <xsl:when test="local-name() = 'DefaultConstraintDefinition'">
+          <xsl:apply-templates select="." />
+        </xsl:when>
+        <xsl:when test="local-name() = 'UniqueConstraintDefinition'">
+          <xsl:if test="ancestor::AlterTableAddTableElementStatement">
+            <xsl:text>ADD </xsl:text>
+          </xsl:if>
+          <xsl:apply-templates select="." />
+        </xsl:when>
+        <xsl:when test="local-name() = 'ForeignKeyConstraintDefinition'">
+          <xsl:if test="ancestor::AlterTableAddTableElementStatement">
+            <xsl:text>ADD </xsl:text>
+          </xsl:if>
+          <xsl:apply-templates select="." />
+        </xsl:when>     
+        <!-- TODO: Other constraints definitions -->
+        <xsl:otherwise>
+          <xsl:call-template name="_UnknownToken" />
+        </xsl:otherwise>
+      </xsl:choose>
+  </xsl:for-each>
   </xsl:template>
 
   <!-- Default constraint -->

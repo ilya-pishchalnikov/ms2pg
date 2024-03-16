@@ -12,7 +12,7 @@
       <xsl:value-of select="BaseIdentifier/@Value" />
     </xsl:if>
   </xsl:template>  
-  
+
   <!-- Expression -->
   <xsl:template match="Expression|FirstExpression|SecondExpression|SearchCondition|ColumnReferenceExpression|BinaryExpression">
   <xsl:choose>
@@ -69,6 +69,9 @@
         <xsl:choose>
           <xsl:when test="FunctionName/@Value = 'isnull'">
             <xsl:text>coalesce</xsl:text>
+          </xsl:when>
+          <xsl:when test="FunctionName/@Value = 'getdate'">
+            <xsl:text>now</xsl:text>
           </xsl:when>
           <xsl:otherwise>
             <xsl:value-of select="FunctionName/@Value" />

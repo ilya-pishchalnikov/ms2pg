@@ -19,7 +19,9 @@ namespace ms2pg.PgScripter
                 {
                     XmlFileName = x,
                     OutputFileName = Path.Combine(convertToDirectory, Path.GetRelativePath(baseDirectory, Path.ChangeExtension(x, "sql")))                    
-                });
+                }).ToList();
+
+            files.Sort((x, y) => x.OutputFileName.CompareTo(y.OutputFileName));
 
             foreach (var file in files)
             {

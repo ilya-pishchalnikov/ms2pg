@@ -26,7 +26,11 @@ namespace ms2pg.MsScripter
                 select property
                 ).ToList();
 
-            var scriptableObjects = database.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(x => x.PropertyType.BaseType == typeof(SchemaCollectionBase)).ToList().Select(x => x.GetValue(database));
+            var scriptableObjects = database.GetType()
+                .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(x => x.PropertyType.BaseType == typeof(SchemaCollectionBase))
+                .ToList()
+                .Select(x => x.GetValue(database));
 
             foreach (SchemaCollectionBase scriptableObject in scriptableObjects.Cast<SchemaCollectionBase>())
             {

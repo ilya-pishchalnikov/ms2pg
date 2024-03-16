@@ -45,7 +45,14 @@ namespace ms2pg.PgDeploy
         {
             var baseDirectory = config["pg-script-dir"];
             var afterScriptDirectory = config["pg-after-script-dir"];
-            var files = getFileNamesRecursively(baseDirectory, afterScriptDirectory);
+            var scriptDirSequence = config["pg-deploy-dir-sequence"].Split(",");
+            var files = new List<string>();
+            foreach (var scriptDir in scriptDirSequence)
+            {
+                var dirFilesList = getFileNamesRecursively(Path.Combine(baseDirectory, scriptDir));
+                dirFilesList.Sort();
+                files.AddRange(dirFilesList);
+            }
             // Add postprocessing files to the end of list
             files.AddRange(getFileNamesRecursively(afterScriptDirectory));
 
