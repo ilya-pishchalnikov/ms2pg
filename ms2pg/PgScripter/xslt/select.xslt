@@ -132,7 +132,7 @@
       </xsl:for-each>
     </xsl:template>
 
-    <xsl:template match="NamedTableReference|FirstTableReference|SecondTableReference">
+    <xsl:template match="NamedTableReference|FirstTableReference[not(@QualifiedJoinType)]|SecondTableReference[not(@QualifiedJoinType)]">
      <xsl:choose>
         <xsl:when test="SchemaObject">
           <xsl:apply-templates select="SchemaObject" />
@@ -148,6 +148,13 @@
           <xsl:text>)</xsl:text>
           <xsl:call-template name="_IndentDec" />
         </xsl:when>
+        <xsl:when test="FirstTableReference|SecondTableReference">
+          <xsl:call-template name="_IndentInc" />
+          <xsl:call-template name="_LineBreak" />
+          <xsl:apply-templates select="*" />
+          <xsl:call-template name="_IndentDec" />
+          <xsl:call-template name="_LineBreak" />
+        </xsl:when>
         <xsl:otherwise>
           <xsl:text>/*Unknown table reference*/</xsl:text>
         </xsl:otherwise>
@@ -160,7 +167,7 @@
     </xsl:template>
 
     <!-- Join clause -->
-    <xsl:template match="QualifiedJoin|UnqualifiedJoin">
+    <xsl:template match="QualifiedJoin|UnqualifiedJoin|FirstTableReference[@QualifiedJoinType]|SecondTableReference[@QualifiedJoinType]">
       <xsl:apply-templates select ="FirstTableReference" />
       <xsl:call-template name="_LineBreak" />
       <xsl:choose>
