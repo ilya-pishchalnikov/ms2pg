@@ -9,7 +9,7 @@ namespace ms2pg.MsScripter
     {
         public static void ScriptAllObjects (Config.Config config)
         {
-            using var connection = new SqlConnection(config["ms-connection-string"]);
+            using var connection = new SqlConnection(config["ms-connection-string"].Replace("ms2pg", "lv"));
             var server = new Server(new ServerConnection(connection));
             var database = server.Databases[connection.Database];
 

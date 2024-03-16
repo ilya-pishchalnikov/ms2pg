@@ -61,7 +61,7 @@ namespace ms2pg.PgDeploy
                         }
                         catch (Exception ex)
                         {
-                            throw new Exception($"Error while deploy file '{file}' with message: '{ex.Message}'", ex);
+                            
                         }
                         Console.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}\texecuting sql\t{file} => PostgreSQL");
                     }
