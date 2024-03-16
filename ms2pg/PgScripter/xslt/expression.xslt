@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
   xmlns:msxsl="urn:schemas-microsoft-com:xslt" exclude-result-prefixes="msxsl"
+  xmlns:ms2pg="urn:ms2pg"  
 >
   <!-- Object Identifier dbo_ObjectName -->
   <xsl:template match="SchemaObjectName">
     <xsl:if test="SchemaIdentifier">
-      <xsl:value-of select="SchemaIdentifier/@Value" />
+      <xsl:value-of select="ms2pg:QuoteName(SchemaIdentifier/@Value)" />
       <xsl:text>.</xsl:text>
     </xsl:if>
     <xsl:if test="BaseIdentifier">
-      <xsl:value-of select="BaseIdentifier/@Value" />
+      <xsl:value-of select="ms2pg:QuoteName(BaseIdentifier/@Value)" />
     </xsl:if>
   </xsl:template>  
 
@@ -74,7 +75,7 @@
             <xsl:text>now</xsl:text>
           </xsl:when>
           <xsl:otherwise>
-            <xsl:value-of select="FunctionName/@Value" />
+            <xsl:value-of select="ms2pg:QuoteName(FunctionName/@Value)" />
           </xsl:otherwise>  
         </xsl:choose>
         <xsl:text>(</xsl:text>
@@ -115,7 +116,7 @@
 
   <!-- Identifier -->
   <xsl:template match="Identifier">
-    <xsl:value-of select="@Value"></xsl:value-of>
+    <xsl:value-of select="ms2pg:QuoteName(@Value)"></xsl:value-of>
   </xsl:template>
 
 

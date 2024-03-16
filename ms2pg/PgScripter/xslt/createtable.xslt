@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     xmlns:msxsl="urn:schemas-microsoft-com:xslt" exclude-result-prefixes="msxsl"
+    xmlns:ms2pg="urn:ms2pg"  
 >
   <xsl:import href="common.xslt"/>
   <xsl:import href="settings.xslt"/>
@@ -39,7 +40,7 @@
 
   <!-- Table column definition -->
   <xsl:template match="ColumnDefinition">
-    <xsl:value-of select="ColumnIdentifier/@Value" />
+    <xsl:value-of select="ms2pg:QuoteName(ColumnIdentifier/@Value)" />
     <xsl:text> </xsl:text>
     <xsl:apply-templates select="DataType"/>
     <xsl:text> </xsl:text>

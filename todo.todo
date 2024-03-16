@@ -1,9 +1,8 @@
 /***** Using ToDo+ Extension by Spabio Spampinato ******/
 xslt:
-    - create filtered index statement support
+    - quote unqualified names
     - alter table add/alter column syntax support
     - alter table add index syntax support
-    - quote unqualified names
 
 
     
