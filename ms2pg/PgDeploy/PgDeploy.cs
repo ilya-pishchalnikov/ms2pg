@@ -2,6 +2,9 @@
 
 namespace ms2pg.PgDeploy
 {
+    /// <summary>
+    /// Deploy PostgreSQL scripts from files
+    /// </summary>
     internal class PgDeploy
     {
         /// <summary>
@@ -61,7 +64,7 @@ namespace ms2pg.PgDeploy
                         }
                         catch (Exception ex)
                         {
-                            
+                            throw new ApplicationException($"error while execute file {file} ", ex);
                         }
                         Console.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}\texecuting sql\t{file} => PostgreSQL");
                     }

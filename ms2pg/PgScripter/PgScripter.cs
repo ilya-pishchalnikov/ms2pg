@@ -4,6 +4,10 @@ namespace ms2pg.PgScripter
 {
     internal class PgScripter
     {
+        /// <summary>
+        /// Script all files 
+        /// </summary>
+        /// <param name="config"></param>
         public static void pgScript(Config.Config config)
         {
             var baseDirectory = config["ms-parsed-dir"];

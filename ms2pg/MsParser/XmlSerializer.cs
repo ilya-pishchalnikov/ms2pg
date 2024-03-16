@@ -9,17 +9,46 @@ namespace ms2pg.MsParser
 {
     public class XmlSerializer
     {
-        public HashSet<object> ObjectsStack = new HashSet<object>();
 
+        /// <summary>
+        /// Used objects stack to avoid an endless loop
+        /// </summary>
+        private HashSet<object> ObjectsStack = new HashSet<object>();
+
+        /// <summary>
+        /// Objects that should not be included in the parsing result
+        /// </summary>
         public HashSet<string> ExcludedProperties = new HashSet<string>();
 
+        /// <summary>
+        /// The elements of the IEnumerable list in xml are named the same as the parent element without ending with -s or -es
+        /// </summary>
         public bool IsEnumerableItemNameAsParentWithoutS = true;
+        /// <summary>
+        /// Show debug messages if true
+        /// </summary>
         public bool IsDebugMessages = false;
+        /// <summary>
+        /// Ignore serialization errors if true
+        /// </summary>
         public bool IsIgnoreSerializationErrors = true;
+        /// <summary>
+        /// Add attribute with type name to each element if true
+        /// </summary>
         public bool IsAddType = false;
+        /// <summary>
+        /// Use type name as element name if true
+        /// </summary>
         public bool IsTypeAsElementName = true;
+        /// <summary>
+        /// Untyped properties (RuntimePropertyType) ignored if true
+        /// </summary>
         public bool IsIgnoreUntypedProperties = false;
-
+        /// <summary>
+        /// Serialize object to XmlDocument
+        /// </summary>
+        /// <param name="obj">Object to serialize</param>
+        /// <returns>XML document parse result</returns>
         public XmlDocument Serialize(object obj)
         {
             if (IsDebugMessages)
@@ -43,6 +72,14 @@ namespace ms2pg.MsParser
 
             return xmlResult;
         }
+
+        /// <summary>
+        /// Recursively serialize object to xml element
+        /// </summary>
+        /// <param name="obj">Object to serialize</param>
+        /// <param name="currentElement">start element to serialize object</param>
+        /// <returns>XML element parse resule</returns>
+        /// <exception cref="Exception"></exception>
         private XmlElement Serialize(object obj, XmlElement currentElement)
         {
             if (IsDebugMessages)
@@ -145,6 +182,12 @@ namespace ms2pg.MsParser
             ObjectsStack.Remove(obj);
             return currentElement;
         }
+
+        /// <summary>
+        /// Check if type is simple scalar
+        /// </summary>
+        /// <param name="type">Type to check</param>
+        /// <returns>True if type is simple</returns>
         private bool IsSimpleType(Type type)
         {
             if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))

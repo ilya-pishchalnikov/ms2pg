@@ -28,8 +28,7 @@ namespace ms2pg.PgScripter
                 var xsltSettings = new XsltSettings(true, true);
 
                 var xsltArguments = new XsltArgumentList();
-                xsltArguments.AddExtensionObject("urn:custom", new XsltExtensionFunctions());
-
+                
                 xslt.Load(xsltFileName, xsltSettings, new XmlUrlResolver());
                 //Execute the XSLT transform.
                 using (var outputStream = new FileStream(outputFileName, FileMode.Create))
@@ -60,7 +59,11 @@ namespace ms2pg.PgScripter
             }
             
         }
-
+        /// <summary>
+        /// Put indents into file
+        /// </summary>
+        /// <param name="rawScriptText">Script string</param>
+        /// <returns>Script string with indents</returns>
         private static string PostProcessIndents (string rawScriptText)
         {
             // Increments processing

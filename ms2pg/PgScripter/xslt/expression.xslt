@@ -6,12 +6,13 @@
   <xsl:template match="SchemaObjectName">
     <xsl:if test="SchemaIdentifier">
       <xsl:value-of select="SchemaIdentifier/@Value" />
-      <xsl:text>_</xsl:text>
+      <xsl:text>.</xsl:text>
     </xsl:if>
     <xsl:if test="BaseIdentifier">
       <xsl:value-of select="BaseIdentifier/@Value" />
     </xsl:if>
   </xsl:template>  
+  
   <!-- Expression -->
   <xsl:template match="Expression|FirstExpression|SecondExpression|SearchCondition|ColumnReferenceExpression|BinaryExpression">
   <xsl:choose>

@@ -5,8 +5,15 @@ using System.Reflection;
 
 namespace ms2pg.MsScripter
 {
+    /// <summary>
+    /// Script MSSQL database into files
+    /// </summary>
     internal static class ObjectsScripter
     {
+        /// <summary>
+        /// Scripts all objects of database. 
+        /// </summary>
+        /// <param name="config">Application configuration</param>
         public static void ScriptAllObjects (Config.Config config)
         {
             using var connection = new SqlConnection(config["ms-connection-string"].Replace("ms2pg", "lv"));

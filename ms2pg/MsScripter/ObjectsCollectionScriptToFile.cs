@@ -2,6 +2,9 @@
 
 namespace ms2pg.MsScripter
 {
+    /// <summary>
+    /// 
+    /// </summary>
     internal static class ObjectsCollectionScriptToFile
     {
         public static void ScriptToFiles(this SchemaCollectionBase objectsCollection, string folderName, bool isOwerwrite)

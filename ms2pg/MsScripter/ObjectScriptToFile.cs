@@ -3,8 +3,17 @@ using System.Text;
 
 namespace ms2pg.MsScripter
 {
+    /// <summary>
+    /// Scripts database object to the file
+    /// </summary>
     internal static class ObjectScriptToFile
     {
+        /// <summary>
+        /// cripts database object to the file
+        /// </summary>
+        /// <param name="dbObject">Database object as IScriptable</param>
+        /// <param name="path">Path to file will save</param>
+        /// <param name="isOverwrite">Overwrite file if true</param>
         public static void ScriptToFile(this IScriptable dbObject, string path, bool isOverwrite) 
         {
             if (isOverwrite || !File.Exists(path))

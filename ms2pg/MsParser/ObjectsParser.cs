@@ -10,7 +10,9 @@ using ms2pg.Config;
 
 namespace ms2pg.MsParser
 {
-
+    /// <summary>
+    /// MS SQL file parser to xml
+    /// </summary>
     internal static class ObjectsParser
     {
         /// <summary>
@@ -75,58 +77,5 @@ namespace ms2pg.MsParser
             using XmlWriter writer = XmlWriter.Create(parseResultXmlString, settings);
             parseResultXml.Save(Path.ChangeExtension(fileName, ".xml"));
         }
-
-        // /// <summary>
-        // /// Добавляем в полученный xml ноды с токенами в каждый statement
-        // /// </summary>
-        // /// <param name="parseResult">Результат парсинга</param>
-        // /// <returns></returns>
-        // private static XmlDocument GetParsedXml(ParseResult parseResult)
-        // {
-        //     var parseResultXml = new XmlDocument();
-        //     parseResultXml.LoadXml(parseResult.Script.Xml);
-
-        //     var statementsStack = new Stack<SqlStatement>();
-        //     foreach (SqlBatch batch in parseResult.Script.Batches)
-        //     {
-        //         batch.Statements.ToList().ForEach(s => statementsStack.Push(s));
-
-        //         while (statementsStack.Count > 0)
-        //         {
-        //             var currentStatement = statementsStack.Pop();
-        //             if (currentStatement is null) { continue; }
-
-        //             currentStatement.Children
-        //                 .Select(child => child as SqlStatement)
-        //                 .Where(child => child != null)
-        //                 .ToList()
-        //                 .ForEach(statement => statementsStack.Push(statement!));
-
-        //             var startLocation = currentStatement.StartLocation.ToString();
-        //             var endLocation = currentStatement.EndLocation.ToString();
-        //             var location = $"({startLocation},{endLocation})";
-
-
-        //             if (parseResultXml.SelectSingleNode($"//*[@Location='{location}']") is XmlElement sqlItemXml)
-        //             {
-        //                 var tokensXml = sqlItemXml.AppendChild(parseResultXml.CreateElement("Tokens"));
-        //                 foreach (var token in currentStatement.Tokens)
-        //                 {
-        //                     var tokenStartLocation = token.StartLocation.ToString();
-        //                     var tokenEndLocation = token.EndLocation.ToString();
-        //                     var tokenLocation = $"({startLocation}, {endLocation})";
-        //                     var tokenXml = tokensXml!.AppendChild(parseResultXml.CreateElement("Token"));
-        //                     tokenXml!.Attributes!.Append(parseResultXml.CreateAttribute("location"));
-        //                     tokenXml!.Attributes["location"]!.Value = tokenLocation;
-        //                     tokenXml!.Attributes.Append(parseResultXml.CreateAttribute("type"));
-        //                     tokenXml!.Attributes["type"]!.Value = token.Type;
-        //                     tokenXml!.InnerText = token.Text;
-        //                 }
-        //             }
-        //         }
-
-        //     }
-        //     return parseResultXml;
-        // }
     }
 }
