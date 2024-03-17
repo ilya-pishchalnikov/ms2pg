@@ -77,6 +77,7 @@ namespace ms2pg.PgDeploy
                                 files.Append(file);
                                 continue;
                             }
+                            throw new ApplicationException($"Error while deploying file '{file}'", ex);
                             
                         }
                         Console.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}\texecuting sql\t{file} => PostgreSQL");

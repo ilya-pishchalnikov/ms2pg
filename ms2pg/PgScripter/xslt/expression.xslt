@@ -15,7 +15,7 @@
   </xsl:template>  
 
   <!-- Expression -->
-  <xsl:template match="Expression|FirstExpression|SecondExpression|SearchCondition|ColumnReferenceExpression|BinaryExpression|StringLiteral">
+  <xsl:template match="Expression|FirstExpression|SecondExpression|SearchCondition|ColumnReferenceExpression|BinaryExpression|StringLiteral|IntegerLiteral|NewValue">
   <xsl:choose>
       <xsl:when test="@ColumnType='Regular'">
         <xsl:apply-templates select="MultiPartIdentifier" />
@@ -60,15 +60,42 @@
         <xsl:text> * </xsl:text>
         <xsl:apply-templates select="SecondExpression" />
       </xsl:when>
+      <xsl:when test="@BinaryExpressionType='Subtract'">
+        <xsl:apply-templates select="FirstExpression" />
+        <xsl:text> - </xsl:text>
+        <xsl:apply-templates select="SecondExpression" />
+      </xsl:when>
+      <xsl:when test="@IsNot='False'">
+        <xsl:apply-templates select="FirstExpression" />
+        <xsl:apply-templates select="Expression" />
+        <xsl:text> IS NULL </xsl:text>
+      </xsl:when>
+      <xsl:when test="@IsNot='True'">
+        <xsl:apply-templates select="FirstExpression" />
+        <xsl:apply-templates select="Expression" />
+        <xsl:text> IS NOT NULL </xsl:text>
+      </xsl:when>
       <xsl:when test="@BinaryExpressionType='And'">
         <xsl:apply-templates select="FirstExpression" />
         <xsl:text> AND </xsl:text>
+        <xsl:apply-templates select="SecondExpression" />
+      </xsl:when>
+      <xsl:when test="@BinaryExpressionType='Or'">
+        <xsl:apply-templates select="FirstExpression" />
+        <xsl:text> OR </xsl:text>
         <xsl:apply-templates select="SecondExpression" />
       </xsl:when>
       <xsl:when test="@LiteralType='String'">
         <xsl:text>'</xsl:text>
         <xsl:value-of select="@Value"></xsl:value-of>
         <xsl:text>'</xsl:text>
+      </xsl:when>
+      <xsl:when test="@LiteralType='Integer'">
+        <xsl:value-of select="@Value"></xsl:value-of>
+      </xsl:when>
+      <xsl:when test="starts-with(@Name, '@')">
+        <xsl:text>var</xsl:text>
+        <xsl:value-of select="translate(@Name, '@', '_')"></xsl:value-of>
       </xsl:when>
       <xsl:when test="QueryExpression">
         <xsl:text>(</xsl:text>
@@ -132,6 +159,19 @@
   <!-- Identifier -->
   <xsl:template match="Identifier">
     <xsl:value-of select="ms2pg:QuoteName(@Value)"></xsl:value-of>
+  </xsl:template>
+
+
+  <!-- Variable name -->
+  <xsl:template match="VariableName">
+    <xsl:text>var</xsl:text>
+    <xsl:value-of select="translate(@Value,'@', '_')" />
+  </xsl:template> 
+
+  <!-- Variable name -->
+  <xsl:template match="Variable">
+    <xsl:text>var</xsl:text>
+    <xsl:value-of select="translate(@Name,'@', '_')" />
   </xsl:template>
 
 

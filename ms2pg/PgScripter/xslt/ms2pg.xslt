@@ -11,6 +11,7 @@
   <xsl:import href="createview.xslt" />
   <xsl:import href="select.xslt" />
   <xsl:import href="expression.xslt" />
+  <xsl:import href="createprocedure.xslt" />
   
   
   <xsl:output method="text" omit-xml-declaration="yes"/>
@@ -18,7 +19,7 @@
   <!-- =================================== ТОЧКА ВХОДА =================================== -->
   <xsl:template match="/">
     <xsl:for-each select="TSqlScript/Batches/TSqlBatch/.">
-      <xsl:call-template name="_Statements"/>
+      <xsl:apply-templates select="Statements"/>
       <xsl:call-template name="_LineBreak"/>
       <xsl:text>/*GO*/</xsl:text>
       <xsl:call-template name="_LineBreak"/>

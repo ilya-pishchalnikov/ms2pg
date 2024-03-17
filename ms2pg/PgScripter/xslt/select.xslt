@@ -30,6 +30,9 @@
         <xsl:when test="local-name()='SelectScalarExpression'">
           <xsl:apply-templates select="Expression" />
         </xsl:when>
+        <xsl:when test="local-name()='SelectSetVariable'">
+          <xsl:apply-templates select="Expression" />
+        </xsl:when>
         <xsl:when test="local-name()='SelectStarExpression'">
           <xsl:text>*</xsl:text>
         </xsl:when>
@@ -40,6 +43,16 @@
         <xsl:apply-templates select="ColumnName/Identifier" />
       </xsl:if>
     </xsl:for-each>
+    <xsl:if test="SelectSetVariable">
+      <xsl:call-template name="_IndentDec" />
+      <xsl:call-template name="_LineBreak" />
+      <xsl:text>INTO</xsl:text>
+      <xsl:call-template name="_IndentInc" />
+      <xsl:call-template name="_LineBreak" /> 
+      <xsl:for-each select="SelectSetVariable">
+        <xsl:apply-templates select="Variable" />
+      </xsl:for-each>
+    </xsl:if>
     <xsl:call-template name="_IndentDec" />
     <xsl:call-template name="_LineBreak" />
   </xsl:template>  
