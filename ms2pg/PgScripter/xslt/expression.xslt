@@ -15,7 +15,7 @@
   </xsl:template>  
 
   <!-- Expression -->
-  <xsl:template match="Expression|FirstExpression|SecondExpression|SearchCondition|ColumnReferenceExpression|BinaryExpression">
+  <xsl:template match="Expression|FirstExpression|SecondExpression|SearchCondition|ColumnReferenceExpression|BinaryExpression|StringLiteral">
   <xsl:choose>
       <xsl:when test="@ColumnType='Regular'">
         <xsl:apply-templates select="MultiPartIdentifier" />
@@ -42,12 +42,27 @@
       </xsl:when>
       <xsl:when test="@BinaryExpressionType='Add'">
         <xsl:apply-templates select="FirstExpression" />
-        <xsl:text> + </xsl:text>
+        <xsl:choose>
+          <xsl:when test="   descendant::node()[@BinaryExpressionType='Add']/FirstExpression[@LiteralType='String']
+                          or descendant::node()[@BinaryExpressionType='Add']/SecondExpression[@LiteralType='String'] 
+                          or ancestor-or-self::node()[@BinaryExpressionType='Add']/FirstExpression[@LiteralType='String'] 
+                          or ancestor-or-self::node()[@BinaryExpressionType='Add']/SecondExpression[@LiteralType='String']">
+            <xsl:text> || </xsl:text>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:text> + </xsl:text>
+          </xsl:otherwise>
+        </xsl:choose>
         <xsl:apply-templates select="SecondExpression" />
       </xsl:when>
       <xsl:when test="@BinaryExpressionType='Multiply'">
         <xsl:apply-templates select="FirstExpression" />
         <xsl:text> * </xsl:text>
+        <xsl:apply-templates select="SecondExpression" />
+      </xsl:when>
+      <xsl:when test="@BinaryExpressionType='And'">
+        <xsl:apply-templates select="FirstExpression" />
+        <xsl:text> AND </xsl:text>
         <xsl:apply-templates select="SecondExpression" />
       </xsl:when>
       <xsl:when test="@LiteralType='String'">
@@ -68,10 +83,10 @@
       </xsl:when>
       <xsl:when test="FunctionName">
         <xsl:choose>
-          <xsl:when test="FunctionName/@Value = 'isnull'">
+          <xsl:when test="ms2pg:ToLower(FunctionName/@Value) = 'isnull'">
             <xsl:text>coalesce</xsl:text>
           </xsl:when>
-          <xsl:when test="FunctionName/@Value = 'getdate'">
+          <xsl:when test="ms2pg:ToLower(FunctionName/@Value) = 'getdate'">
             <xsl:text>now</xsl:text>
           </xsl:when>
           <xsl:otherwise>
@@ -79,7 +94,7 @@
           </xsl:otherwise>  
         </xsl:choose>
         <xsl:text>(</xsl:text>
-        <xsl:for-each select="Parameters/.">
+        <xsl:for-each select="Parameters/*">
           <xsl:if test="position()>1">
             <xsl:text>, </xsl:text>
           </xsl:if>

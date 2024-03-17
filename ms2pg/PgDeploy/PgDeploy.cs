@@ -1,4 +1,5 @@
-﻿using Npgsql;
+﻿using System.Text.RegularExpressions;
+using Npgsql;
 
 namespace ms2pg.PgDeploy
 {
@@ -71,7 +72,12 @@ namespace ms2pg.PgDeploy
                         }
                         catch (Exception ex)
                         {
-                            throw new ApplicationException($"error while execute file {file} ", ex);
+                            if (Regex.IsMatch (ex.Message, "42P01: relation \".+\" does not exist" ))
+                            {
+                                files.Append(file);
+                                continue;
+                            }
+                            
                         }
                         Console.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}\texecuting sql\t{file} => PostgreSQL");
                     }

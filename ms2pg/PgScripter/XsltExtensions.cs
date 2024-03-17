@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Policy;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -91,7 +92,7 @@ namespace ms2pg.PgScripter
         public string QuoteName(string name)
         {            
             if (Regex.IsMatch(name, "^[^a-zA-Z_].+")
-                || Regex.IsMatch(name, "[^a-zA-Z_/d].+")
+                || Regex.IsMatch(name, "[^a-zA-Z_0-9]")
                 || _Keywords.Contains(name.ToLower()))
             {
                 return $"\"{name}\"";
@@ -100,6 +101,11 @@ namespace ms2pg.PgScripter
             {
                 return name;
             }
+        }
+
+        public string ToLower (string str)
+        {
+            return str.ToLower();
         }
     }
 }
