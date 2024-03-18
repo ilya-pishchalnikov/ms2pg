@@ -44,17 +44,6 @@ namespace ms2pg.PgScripter
                 var rawScriptText = File.ReadAllText(outputFileName);
 
                 var IndentedText = PostProcessIndents(rawScriptText);
-                
-                var statementsToAfterScript = config["statements-to-after-script"].Split(",").ToList();
-                var postProcessedScript = new StringBuilder();
-                var postProcessedAfterScript = new StringBuilder();
-                PostProcessStatements(IndentedText, statementsToAfterScript, out postProcessedScript, out postProcessedAfterScript);
-                File.WriteAllText(outputFileName, postProcessedScript.ToString());
-                var afterScriptFilePath = Path.Combine(config["pg-after-script-dir"], Path.GetFileName(outputFileName));
-                if (postProcessedAfterScript.Length > 0) 
-                {
-                    File.WriteAllText(afterScriptFilePath, postProcessedAfterScript.ToString());
-                }
             }
             catch (Exception ex)
             {

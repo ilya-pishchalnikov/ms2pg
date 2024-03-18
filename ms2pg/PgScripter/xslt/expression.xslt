@@ -147,7 +147,7 @@
   
 
   <!-- MultiPartIdentifier -->
-  <xsl:template match="ConvertCall">
+  <!--xsl:template match="ConvertCall">
     <xsl:text>/*CONVERT*/</xsl:text>
     <xsl:choose>
       <xsl:when test="Style/@Value">
@@ -158,16 +158,14 @@
         <xsl:text>', </xsl:text>
         <xsl:choose>
           <xsl:when test="count(DataType/Parameters) > 1">
-            <xsl:value-of select="DataType/Parameters/IntegerLiteral[2]/@Value">
+            <xsl:value-of select="DataType/Parameters/IntegerLiteral[2]/@Value" />
           </xsl:when>
           <xsl:otherwise>
             <xsl:text>-1</xsl:text>
           </xsl:otherwise>
         </xsl:choose>
         <xsl:text>', CAST(</xsl:text>
-        <xsl:value-of select="Paramenter/"></xsl:value-of>
-
-         
+        <xsl:value-of select="Paramenter"></xsl:value-of>         
         <xsl:text>)</xsl:text>
       </xsl:when>
       <xsl:otherwise>        
@@ -178,10 +176,8 @@
         <xsl:text>)</xsl:text>
       </xsl:otherwise>
     </xsl:choose>
-     
-
     <xsl:apply-templates select="DataType" />
-  </xsl:template>
+  </xsl:template-->
 
   <!-- Identifiers -->
   <xsl:template match="Identifiers">

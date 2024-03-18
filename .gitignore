@@ -363,5 +363,4 @@ MigrationBackup/
 FodyWeavers.xsd
 
 # xml and sql files
-*.xml
-*.sql
+script/

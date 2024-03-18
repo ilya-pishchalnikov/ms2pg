@@ -45,7 +45,6 @@ namespace ms2pg.PgDeploy
         public static void Deploy(Config.Config config)
         {
             var baseDirectory = config["pg-script-dir"];
-            var afterScriptDirectory = config["pg-after-script-dir"];
             var scriptDirSequence = config["pg-deploy-dir-sequence"].Split(",");
             var files = new List<string>();
             foreach (var scriptDir in scriptDirSequence)
@@ -55,7 +54,6 @@ namespace ms2pg.PgDeploy
                 files.AddRange(dirFilesList);
             }
             // Add postprocessing files to the end of list
-            files.AddRange(getFileNamesRecursively(afterScriptDirectory));
 
             var connectionString = config["pg-connection-string"];
             using (var connection = new Npgsql.NpgsqlConnection(connectionString))

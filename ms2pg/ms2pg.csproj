@@ -9,26 +9,58 @@
 
   <ItemGroup>
     <None Remove="config.xml" />
+    <None Remove="PgScripter\xslt\altertable.xslt" />
     <None Remove="PgScripter\xslt\common.xslt" />
+    <None Remove="PgScripter\xslt\createindex.xslt" />
+    <None Remove="PgScripter\xslt\createprocedure.xslt" />
     <None Remove="PgScripter\xslt\createtable.xslt" />
+    <None Remove="PgScripter\xslt\createview.xslt" />
+    <None Remove="PgScripter\xslt\datatypes.xslt" />
+    <None Remove="PgScripter\xslt\expression.xslt" />
     <None Remove="PgScripter\xslt\ms2pg.xslt" />
+    <None Remove="PgScripter\xslt\select.xslt" />
     <None Remove="PgScripter\xslt\settings.xslt" />
+    <None Remove="PgScripter\xslt\statements.xslt" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="config.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
+    <EmbeddedResource Include="PgScripter\xslt\altertable.xslt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
     <EmbeddedResource Include="PgScripter\xslt\common.xslt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PgScripter\xslt\createindex.xslt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PgScripter\xslt\createprocedure.xslt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="PgScripter\xslt\createtable.xslt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
+    <EmbeddedResource Include="PgScripter\xslt\createview.xslt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PgScripter\xslt\datatypes.xslt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PgScripter\xslt\expression.xslt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
     <EmbeddedResource Include="PgScripter\xslt\ms2pg.xslt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
+    <EmbeddedResource Include="PgScripter\xslt\select.xslt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
     <EmbeddedResource Include="PgScripter\xslt\settings.xslt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PgScripter\xslt\statements.xslt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
   </ItemGroup>

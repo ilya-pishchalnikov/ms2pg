@@ -55,7 +55,7 @@ namespace ms2pg.MsParser
             }
             
             var serializer = new ms2pg.MsParser.XmlSerializer ();
-            serializer.IsDebugMessages = config["is-debug-messages"] == "true";
+            serializer.IsDebugMessages = config.ContainsKey("is-debug-messages") && config["is-debug-messages"] == "true";
             serializer.IsEnumerableItemNameAsParentWithoutS = config["is-xml-enumerables-name-like-parent"] == "true";
             foreach (var excludedProperty in config["excluded-properties"].Split(","))
             {
