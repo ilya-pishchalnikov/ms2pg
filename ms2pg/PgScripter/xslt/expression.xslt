@@ -140,9 +140,47 @@
     </xsl:choose>
   </xsl:template>
 
+    <!-- ConvertCall -->
+    <xsl:template match="MultiPartIdentifier">
+      <xsl:apply-templates select="Identifiers" />
+    </xsl:template>
+  
+
   <!-- MultiPartIdentifier -->
-  <xsl:template match="MultiPartIdentifier">
-    <xsl:apply-templates select="Identifiers" />
+  <xsl:template match="ConvertCall">
+    <xsl:text>/*CONVERT*/</xsl:text>
+    <xsl:choose>
+      <xsl:when test="Style/@Value">
+        <xsl:text>convert('</xsl:text>
+        <xsl:value-of select="DataType/@SqlDataTypeOption" />
+        <xsl:text>', </xsl:text>
+        <xsl:value-of select="DataType/Parameters/IntegerLiteral[1]/@Value" />
+        <xsl:text>', </xsl:text>
+        <xsl:choose>
+          <xsl:when test="count(DataType/Parameters) > 1">
+            <xsl:value-of select="DataType/Parameters/IntegerLiteral[2]/@Value">
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:text>-1</xsl:text>
+          </xsl:otherwise>
+        </xsl:choose>
+        <xsl:text>', CAST(</xsl:text>
+        <xsl:value-of select="Paramenter/"></xsl:value-of>
+
+         
+        <xsl:text>)</xsl:text>
+      </xsl:when>
+      <xsl:otherwise>        
+        <xsl:text>CAST (</xsl:text>
+          <xsl:apply-templates select="Parameter/MultiPartIdentifier/Identifiers" />
+          <xsl:text> AS </xsl:text>
+          <xsl:apply-templates select="DataType" />
+        <xsl:text>)</xsl:text>
+      </xsl:otherwise>
+    </xsl:choose>
+     
+
+    <xsl:apply-templates select="DataType" />
   </xsl:template>
 
   <!-- Identifiers -->

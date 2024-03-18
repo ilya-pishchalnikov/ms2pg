@@ -42,6 +42,10 @@
           <xsl:apply-templates select = "." />
           <xsl:call-template name="_EndOfStatement" />
         </xsl:when>
+        <xsl:when test="local-name() = 'CommitTransactionStatement'">
+          <xsl:apply-templates select = "." />
+          <xsl:call-template name="_EndOfStatement" />
+        </xsl:when>
         <xsl:when test="local-name() = 'TryCatchStatement'">
           <xsl:apply-templates select = "." />
           <xsl:call-template name="_EndOfStatement" />
@@ -51,6 +55,14 @@
           <xsl:call-template name="_EndOfStatement" />
         </xsl:when>
         <xsl:when test="local-name() = 'UpdateStatement'">
+          <xsl:apply-templates select = "." />
+          <xsl:call-template name="_EndOfStatement" />
+        </xsl:when>
+        <xsl:when test="local-name() = 'InsertStatement'">
+          <xsl:apply-templates select = "." />
+          <xsl:call-template name="_LineBreak" />
+        </xsl:when>
+        <xsl:when test="local-name() = 'RaiseErrorStatement'">
           <xsl:apply-templates select = "." />
           <xsl:call-template name="_EndOfStatement" />
         </xsl:when>
@@ -88,20 +100,26 @@
   <xsl:template match="BeginTransactionStatement">
     <xsl:text>START TRANSACTION</xsl:text>
   </xsl:template>
-  <!-- Begin transaction statement -->
+
+  <!-- Rollback transaction statement -->
   <xsl:template match="RollbackTransactionStatement">
     <xsl:text>ROLLBACK</xsl:text>
+  </xsl:template>
+  
+  <!-- Commit transaction statement -->
+  <xsl:template match="CommitTransactionStatement">
+    <xsl:text>COMMIT</xsl:text>
   </xsl:template>
 
     <!-- Try-catch statement -->
     <xsl:template match="TryCatchStatement">
-      <xsl:text>BEGIN</xsl:text>
+      <xsl:text>BEGIN -- try</xsl:text>
       <xsl:call-template name="_IndentInc" />
       <xsl:call-template name="_LineBreak" />
       <xsl:apply-templates select="TryStatements/Statements" />
       <xsl:call-template name="_IndentDec" />
       <xsl:call-template name="_LineBreak" />
-      <xsl:text>EXCEPTION WHEN OTHERS</xsl:text>
+      <xsl:text>EXCEPTION WHEN OTHERS -- catch</xsl:text>
       <xsl:call-template name="_LineBreak" />
       <xsl:text>THEN</xsl:text>
       <xsl:call-template name="_IndentInc" />
@@ -138,5 +156,35 @@
     </xsl:template>
 
 
+
+    <!-- Insert statement -->
+    <xsl:template match="InsertStatement">
+      <xsl:choose>
+        <xsl:when test="InsertSpecification/InsertSource/Execute">
+          <xsl:text>/********************** INSERT-EXEC NOT SUPPORTED **********************/</xsl:text>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:call-template name="_UnknownToken" />
+        </xsl:otherwise>
+      </xsl:choose>
+    </xsl:template>
+
+    <!-- Raiserror statement -->
+    <xsl:template match="RaiseErrorStatement">
+      <xsl:text>RAISE </xsl:text>
+      <xsl:choose>
+        <xsl:when test="string-length(SecondParameter/@Value)>1 and SecondParameter/@Value!='10'">
+          <xsl:text>EXCEPTION </xsl:text>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:text>NOTICE</xsl:text>
+        </xsl:otherwise>
+      </xsl:choose>
+      <xsl:text>'</xsl:text>
+      <xsl:value-of select="FirstParameter/@Value"></xsl:value-of>
+      <xsl:text>'</xsl:text>
+
+    </xsl:template>
+  
 
 </xsl:stylesheet>
