@@ -15,7 +15,7 @@
   </xsl:template>  
 
   <!-- Expression -->
-  <xsl:template match="Expression|FirstExpression|SecondExpression|SearchCondition|ColumnReferenceExpression|BinaryExpression|StringLiteral|IntegerLiteral|NewValue|WhenExpression|ThenExpression|ElseExpression|Parameter|UnaryExpression">
+  <xsl:template match="Expression|FirstExpression|SecondExpression|SearchCondition|ColumnReferenceExpression|BinaryExpression|StringLiteral|IntegerLiteral|NewValue|WhenExpression|ThenExpression|ElseExpression|Parameter|UnaryExpression|FunctionCall|NumericLiteral|ConvertCall">
   <xsl:choose>
       <xsl:when test="@ColumnType='Regular'">
         <xsl:apply-templates select="MultiPartIdentifier" />
@@ -129,11 +129,11 @@
         </xsl:for-each>
         <xsl:text>)</xsl:text>
       </xsl:when>
-      <xsl:when test="@Style">
-        <xsl:text>CONVERT(</xsl:text>
-        <xsl:apply-templates select="DataType"/>
-        <xsl:text>, </xsl:text>
+      <xsl:when test="@Style or local-name() = 'ConvertCall'">
+        <xsl:text>CAST(</xsl:text>
         <xsl:apply-templates select="Parameter"/>
+        <xsl:text> AS </xsl:text>
+        <xsl:apply-templates select="DataType"/>
         <xsl:text>)</xsl:text>
       </xsl:when>
       <xsl:when test="@NotDefined">
