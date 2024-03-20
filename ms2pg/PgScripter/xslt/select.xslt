@@ -72,12 +72,12 @@
       <xsl:text>GROUP BY </xsl:text>
       <xsl:call-template name="_IndentInc" />
       <xsl:call-template name="_LineBreak" /> 
-      <xsl:for-each select="GroupingSpecifications">
+      <xsl:for-each select="GroupingSpecifications/ExpressionGroupingSpecification">
         <xsl:if test="position() > 1">
           <xsl:call-template name="_LineBreak" />
           <xsl:text>,</xsl:text>
         </xsl:if>
-        <xsl:apply-templates select="ExpressionGroupingSpecification/Expression" />
+        <xsl:apply-templates select="Expression" />
       </xsl:for-each>
       <xsl:call-template name="_IndentDec" />
       <xsl:call-template name="_LineBreak" />
@@ -217,6 +217,18 @@
       <xsl:apply-templates select="SearchCondition" />
       <xsl:call-template name="_IndentDec" />
       <xsl:call-template name="_LineBreak" />
+    </xsl:template>
+
+    <xsl:template match="Subquery">
+      <xsl:text>(</xsl:text>
+      <xsl:call-template name="_IndentInc" />
+      <xsl:call-template name="_IndentInc" />
+      <xsl:call-template name="_LineBreak" />    
+      <xsl:apply-templates select="QueryExpression" />
+      <xsl:call-template name="_IndentDec" />
+      <xsl:call-template name="_LineBreak" />
+      <xsl:text>)</xsl:text>
+      <xsl:call-template name="_IndentDec" />
     </xsl:template>
 
     <!-- From clause -->

@@ -44,6 +44,10 @@ namespace ms2pg.PgScripter
                 var rawScriptText = File.ReadAllText(outputFileName);
 
                 var IndentedText = PostProcessIndents(rawScriptText);
+
+                IndentedText = StatementBeginEndRegEx().Replace(IndentedText, "");
+
+                File.WriteAllText(outputFileName, IndentedText);
             }
             catch (Exception ex)
             {
@@ -89,48 +93,7 @@ namespace ms2pg.PgScripter
 
             return processedIndents.ToString();
         }
-        /// <summary>
-        /// Не поддерживает вложенность выносимых в пособработку стейтментов
-        /// </summary>
-        /// <param name="rawScriptText"></param>
-        /// <param name="statementsToAfterScript"></param>
-        /// <param name="script"></param>
-        /// <param name="afterScript"></param>
-        private static void PostProcessStatements (string rawScriptText, List<string> statementsToAfterScript, out StringBuilder script, out StringBuilder afterScript)
-        {         
-            var tokensStatements = StatementBeginEndRegEx().Split(rawScriptText.ToString());
-            var isAfterScript = false;
-            script = new StringBuilder();
-            afterScript = new StringBuilder();
 
-            foreach (var token in tokensStatements)
-            {
-                string statementName = string.Empty;
-                if (token.StartsWith("{{StatementBegin:"))
-                {
-                    statementName = token.Split(":")[1];
-                    statementName = statementName.Substring(0,statementName.Length - 2);
-                    isAfterScript = statementsToAfterScript.Contains(statementName);
-                }
-                else if (token.StartsWith("{{StatementEnd:"))
-                {                    
-                    statementName = token.Split(":")[1];
-                    statementName = statementName.Substring(0,statementName.Length - 2);
-                    if (statementsToAfterScript.Contains(statementName)) {
-                        isAfterScript = false;
-                    }
-                }
-                else
-                {
-                    if (isAfterScript) {                        
-                        afterScript.Append(token);
-                    }
-                    else {
-                        script.Append(token);
-                    }
-                }
-            }
-        }
 
         [GeneratedRegex("({{Indent\\+\\+}}|{{Indent--}}|\\r\\n|\\n\\r|\\r|\\n)")]
         private static partial Regex IndentsRegex();
@@ -138,13 +101,6 @@ namespace ms2pg.PgScripter
 
         [GeneratedRegex("({{StatementBegin:[^}]+}}|{{StatementEnd:[^}]+}})")]
         private static partial Regex StatementBeginEndRegEx ();
-        
 
-        [GeneratedRegex("{{StatementBegin:[^}]+}}")]
-        private static partial Regex StatementBeginRegEx ();
-
-
-        [GeneratedRegex("{{StatementEnd:[^}]+}}")]
-        private static partial Regex StatementEndRegEx ();
     }
 }

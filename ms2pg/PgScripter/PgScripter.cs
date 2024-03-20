@@ -23,12 +23,24 @@ namespace ms2pg.PgScripter
 
             files.Sort((x, y) => x.OutputFileName.CompareTo(y.OutputFileName));
 
+            var filesFilters = new List<String>();
+            if (config.ContainsKey("file-name-contains-filters"))
+            {
+                filesFilters.AddRange(
+                    config["file-name-contains-filters"]
+                    .Split(',')
+                    .Where(x => !String.IsNullOrEmpty(x)));
+            }
+
             foreach (var file in files)
             {
-                Console.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}\tgenerating sql\t{file.XmlFileName} => {file.OutputFileName}");
-                var OutputDirectoryName = Path.GetDirectoryName(file.OutputFileName);
-                if (!Directory.Exists(OutputDirectoryName)) { Directory.CreateDirectory(OutputDirectoryName!); }
-                MsParsedToPgXsltTransform.GenerateScript(file.XmlFileName, xsltFileName, file.OutputFileName, config);
+                if (filesFilters.Count == 0 || filesFilters.Where(x => file.OutputFileName.Contains(x)).Count() > 0)
+                {
+                    Console.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}\tgenerating sql\t{file.XmlFileName} => {file.OutputFileName}");
+                    var OutputDirectoryName = Path.GetDirectoryName(file.OutputFileName);
+                    if (!Directory.Exists(OutputDirectoryName)) { Directory.CreateDirectory(OutputDirectoryName!); }
+                    MsParsedToPgXsltTransform.GenerateScript(file.XmlFileName, xsltFileName, file.OutputFileName, config);
+                }
             }
 
         }

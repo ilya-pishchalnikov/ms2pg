@@ -62,8 +62,8 @@ namespace ms2pg.MsScripter
                     DriAllKeys = true,
                     DriDefaults = true
                 };
-
-               dbObject.Script(scriptingOptions);
+                
+                dbObject.Script(scriptingOptions);
             }
         }
     }

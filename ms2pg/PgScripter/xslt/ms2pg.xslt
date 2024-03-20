@@ -21,7 +21,7 @@
     <xsl:for-each select="TSqlScript/Batches/TSqlBatch/.">
       <xsl:apply-templates select="Statements"/>
       <xsl:call-template name="_LineBreak"/>
-      <xsl:text>/*GO*/</xsl:text>
+      <xsl:text>{{GO}}</xsl:text>
       <xsl:call-template name="_LineBreak"/>
     </xsl:for-each>
   </xsl:template> 

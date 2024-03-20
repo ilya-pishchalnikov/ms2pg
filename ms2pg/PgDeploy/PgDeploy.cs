@@ -1,4 +1,9 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Collections;
+using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
+using Microsoft.Data.SqlClient;
+using Microsoft.SqlServer.Management.Common;
+using Microsoft.VisualBasic;
 using Npgsql;
 
 namespace ms2pg.PgDeploy
@@ -14,10 +19,10 @@ namespace ms2pg.PgDeploy
         /// <param name="baseDirectory">Directory from which files will get</param>
         /// <param name="excludeDirectory">Except directory. Default null</param>
         /// <returns>List of files paths</returns>
-        private static List<String> getFileNamesRecursively (string baseDirectory, string excludeDirectory = null!) 
+        private static List<String> getFileNamesRecursively(string baseDirectory, string excludeDirectory = null!)
         {
             var files = new List<string>();
-            
+
             if (baseDirectory == null) return files;
 
             var directoryStack = new Stack<string>();
@@ -27,7 +32,7 @@ namespace ms2pg.PgDeploy
             while (directoryStack.Count > 0)
             {
                 var currentDirectory = directoryStack.Pop();
-                if (excludeDirectory!= null && Path.GetFullPath(currentDirectory) == Path.GetFullPath(excludeDirectory))
+                if (excludeDirectory != null && Path.GetFullPath(currentDirectory) == Path.GetFullPath(excludeDirectory))
                 {
                     continue;
                 }
@@ -36,7 +41,7 @@ namespace ms2pg.PgDeploy
             }
             return files;
         }
-        
+
         /// <summary>
         /// Deploy PostgreSQL scripts from files
         /// </summary>
@@ -53,34 +58,81 @@ namespace ms2pg.PgDeploy
                 dirFilesList.Sort();
                 files.AddRange(dirFilesList);
             }
-            // Add postprocessing files to the end of list
 
+            var filesFilters = new List<String>();
+            if (config.ContainsKey("file-name-contains-filters"))
+            {
+                filesFilters.AddRange(
+                    config["file-name-contains-filters"]
+                    .Split(',')
+                    .Where(x => !String.IsNullOrEmpty(x)));
+            }
+
+            var ErrorCount = 1000;
             var connectionString = config["pg-connection-string"];
             using (var connection = new Npgsql.NpgsqlConnection(connectionString))
             {
                 connection.Open();
+
+                var batches = new Queue<String>();
+
                 foreach (var file in files)
                 {
-                    using (var command = connection.CreateCommand())
+                    if (filesFilters.Count == 0 || filesFilters.Where(x => file.Contains(x)).Count() > 0)
                     {
-                        try
-                        {
-                            command.CommandText = File.ReadAllText(file);
-                            command.ExecuteNonQuery();
-                        }
-                        catch (Exception ex)
-                        {
-                            if (Regex.IsMatch (ex.Message, "42P01: relation \".+\" does not exist" ))
-                            {
-                                files.Append(file);
-                                continue;
-                            }
-                            throw new ApplicationException($"Error while deploying file '{file}'", ex);
-                            
-                        }
                         Console.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}\texecuting sql\t{file} => PostgreSQL");
+                        var script = File.ReadAllText(file);
+                        foreach (var scriptBatch in script.Split("{{GO}}"))
+                        {
+                            try
+                            {
+                                DeployBatch(connection, scriptBatch);
+                            }
+                            catch (Exception ex)
+                            {
+                                ErrorCount--;
+                                batches.Enqueue(scriptBatch);
+                                Console.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}\terror while deploying file \t{file}: {ex.Message}");
+                                if (ErrorCount <= 0)
+                                {
+                                    throw new ApplicationException("Error count exceeds limit");
+                                }
+                            }
+                        }
                     }
                 }
+
+
+                while (batches.Count > 0)
+                {
+                    var batch = batches.Dequeue();
+                    Console.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}\texecuting sql batch => PostgreSQL");
+                    try
+                    {
+                        DeployBatch(connection, batch);
+                    }
+                    catch (Exception ex)
+                    {
+                        ErrorCount--;
+                        batches.Enqueue(batch);
+                        Console.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}\terror while deploying batch\n{batch}\n\nERROR: {ex.Message}");
+                        if (ErrorCount <= 0)
+                        {
+                            File.WriteAllText("errors.sql", batches.Aggregate( (x, y) => x + "\n\n/*GO*/\n\n" + y));
+                            throw new ApplicationException($"Error count exceeds limit. Undeployed batches ({batches.Count}) saved to errors.sql");
+                        }
+                    }
+                }
+            }
+        }
+
+
+        private static void DeployBatch(Npgsql.NpgsqlConnection connection, string batch)
+        {
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = batch;
+                command.ExecuteNonQuery();
             }
         }
     }

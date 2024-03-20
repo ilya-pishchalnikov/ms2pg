@@ -21,6 +21,7 @@
     <None Remove="PgScripter\xslt\select.xslt" />
     <None Remove="PgScripter\xslt\settings.xslt" />
     <None Remove="PgScripter\xslt\statements.xslt" />
+    <None Remove="PgDeploy\dependencies.sql" />
   </ItemGroup>
 
   <ItemGroup>
@@ -61,6 +62,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="PgScripter\xslt\statements.xslt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PgDeploy\dependencies.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
   </ItemGroup>

@@ -13,6 +13,7 @@
         </xsl:when>
         <xsl:when test="local-name() = 'CreateTableStatement'">
           <xsl:apply-templates select = "." />
+          <xsl:call-template name="_EndOfStatement" />
         </xsl:when>
         <xsl:when test="local-name() = 'UpdateStatisticsStatement'">
           <xsl:apply-templates select = "." />

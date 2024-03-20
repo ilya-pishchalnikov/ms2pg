@@ -25,9 +25,21 @@ namespace ms2pg.MsParser
 
             string[] files = Directory.GetFiles(baseDirectory, "*.sql", SearchOption.AllDirectories);
 
+            var filesFilters = new List<String>();
+            if (config.ContainsKey("file-name-contains-filters"))
+            {
+                filesFilters.AddRange(
+                    config["file-name-contains-filters"]
+                    .Split(',')
+                    .Where(x => !String.IsNullOrEmpty(x)));
+            }
+
             foreach (var file in files)
             {
-                ParseFile(file, config);
+                if (filesFilters.Count == 0 || filesFilters.Where(x => file.Contains(x)).Count() > 0)
+                {
+                    ParseFile(file, config);
+                }
             }
 
         }

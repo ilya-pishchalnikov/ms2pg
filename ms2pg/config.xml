@@ -6,8 +6,9 @@
   <property name="ms-parsed-dir" value="script/ms"/>
   <property name="pg-script-dir" value="script/pg"/>
   <property name="xslt-file-name" value="PgScripter/xslt/ms2pg.xslt"/>
-  <property name="pg-deploy-dir-sequence" value="Table,View,UserDefinedFunction,StoredProcedure"/>
+  <property name="pg-deploy-dir-sequence" value=".pre,Table,View,UserDefinedFunction,StoredProcedure"/>
   <property name="is-debug-messages" value="false"/>
   <property name="is-xml-enumerables-name-like-parent" value="true"/>
   <property name="excluded-properties" value="ScriptTokenStream"/>
+  <property name="file-name-contains-filters" value="ANT_AutoPrintReport"/>
 </ms2pg-config>
