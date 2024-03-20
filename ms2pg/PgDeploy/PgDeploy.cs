@@ -82,16 +82,21 @@ namespace ms2pg.PgDeploy
                     {
                         Console.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}\texecuting sql\t{file} => PostgreSQL");
                         var script = File.ReadAllText(file);
-                        foreach (var scriptBatch in script.Split("{{GO}}"))
+                        string[] fileBatches = script.Split("{{GO}}");
+                        for(int i = 0; i < fileBatches.Length; i++)
                         {
                             try
                             {
-                                DeployBatch(connection, scriptBatch);
+                                DeployBatch(connection, fileBatches[i]);
                             }
-                            catch (Exception ex)
+                            catch (PostgresException ex)
                             {
+                                if (ErrorsSolver.Solve(ex, fileBatches, i, file))
+                                {
+                                    i--;
+                                }
                                 ErrorCount--;
-                                batches.Enqueue(scriptBatch);
+                                batches.Enqueue(fileBatches[i]);
                                 Console.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}\terror while deploying file \t{file}: {ex.Message}");
                                 if (ErrorCount <= 0)
                                 {
@@ -115,7 +120,7 @@ namespace ms2pg.PgDeploy
                     {
                         ErrorCount--;
                         batches.Enqueue(batch);
-                        Console.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}\terror while deploying batch\n{batch}\n\nERROR: {ex.Message}");
+                        Console.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}\terror while deploying batch\nERROR: {ex.Message}");
                         if (ErrorCount <= 0)
                         {
                             File.WriteAllText("errors.sql", batches.Aggregate( (x, y) => x + "\n\n/*GO*/\n\n" + y));

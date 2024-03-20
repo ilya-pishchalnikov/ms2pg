@@ -10,5 +10,5 @@
   <property name="is-debug-messages" value="false"/>
   <property name="is-xml-enumerables-name-like-parent" value="true"/>
   <property name="excluded-properties" value="ScriptTokenStream"/>
-  <property name="file-name-contains-filters" value="ANT_AutoPrintReport"/>
+  <property name="file-name-contains-filters" value=""/>
 </ms2pg-config>
