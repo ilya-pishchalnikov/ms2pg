@@ -15,7 +15,7 @@
   </xsl:template>  
 
   <!-- Expression -->
-  <xsl:template match="Expression|FirstExpression|SecondExpression|SearchCondition|ColumnReferenceExpression|BinaryExpression|StringLiteral|IntegerLiteral|NewValue|WhenExpression|ThenExpression|ElseExpression|Parameter|UnaryExpression|FunctionCall|NumericLiteral|ConvertCall">
+  <xsl:template match="Expression|FirstExpression|SecondExpression|SearchCondition|ColumnReferenceExpression|BinaryExpression|StringLiteral|IntegerLiteral|NewValue|WhenExpression|ThenExpression|ElseExpression|Parameter|UnaryExpression|FunctionCall|NumericLiteral|ConvertCall|InputExpression">
   <xsl:if test="@FirstTokenType='Not' and *[1]/@FirstTokenType!='Not'">
     <xsl:text> NOT </xsl:text>
   </xsl:if>  
@@ -129,6 +129,9 @@
           <xsl:when test="ms2pg:ToLower(FunctionName/@Value) = 'newid'">
             <xsl:text>uuid_generate_v4</xsl:text>
           </xsl:when>
+          <xsl:when test="ms2pg:ToLower(FunctionName/@Value) = 'db_name'">
+            <xsl:text>current_database</xsl:text>
+          </xsl:when>
           <xsl:otherwise>
             <xsl:value-of select="ms2pg:QuoteName(FunctionName/@Value)" />
           </xsl:otherwise>  
@@ -176,9 +179,10 @@
         <xsl:apply-templates select="Expression"/>
       </xsl:when>
       <xsl:when test="./WhenClauses">
-        <xsl:text>CASE</xsl:text>
+        <xsl:text>CASE </xsl:text>
+        <xsl:apply-templates select="InputExpression"/>
         <xsl:call-template name="_IndentInc" />
-        <xsl:for-each select="WhenClauses/SearchedWhenClause">
+        <xsl:for-each select="WhenClauses/SearchedWhenClause | WhenClauses/SimpleWhenClause">
            <xsl:call-template name="_LineBreak" />
           <xsl:text>WHEN </xsl:text>
           <xsl:apply-templates select="WhenExpression"/> 
