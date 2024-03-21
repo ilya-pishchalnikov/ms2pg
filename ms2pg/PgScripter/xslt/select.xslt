@@ -138,6 +138,11 @@
                 </xsl:if>
               </xsl:for-each>
             </xsl:when>
+            <xsl:when test="QueryDerivedTable">
+              <xsl:text>(</xsl:text>
+              <xsl:apply-templates select="QueryDerivedTable/QueryExpression" />
+              <xsl:text>)</xsl:text>
+            </xsl:when>
             <xsl:otherwise>
               <xsl:text>/*UNKNOWN TABLE REFERENCE*/</xsl:text>
             </xsl:otherwise>
@@ -151,15 +156,7 @@
           <xsl:apply-templates select="SchemaObject" />
         </xsl:when>
         <xsl:when test="QueryExpression">
-          <xsl:text>(</xsl:text>
-          <xsl:call-template name="_IndentInc" />
-          <xsl:call-template name="_IndentInc" />
-          <xsl:call-template name="_LineBreak" />
-          <xsl:apply-templates select="QueryExpression" />
-          <xsl:call-template name="_IndentDec" />
-          <xsl:call-template name="_LineBreak" />
-          <xsl:text>)</xsl:text>
-          <xsl:call-template name="_IndentDec" />
+          <xsl:apply-templates select="."/>
         </xsl:when>
         <xsl:when test="FirstTableReference|SecondTableReference">
           <xsl:call-template name="_IndentInc" />
@@ -219,7 +216,7 @@
       <xsl:call-template name="_LineBreak" />
     </xsl:template>
 
-    <xsl:template match="Subquery">
+    <xsl:template match="Subquery|QueryDerivedTable">
       <xsl:text>(</xsl:text>
       <xsl:call-template name="_IndentInc" />
       <xsl:call-template name="_IndentInc" />
