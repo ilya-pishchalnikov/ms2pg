@@ -16,6 +16,9 @@
 
   <!-- Expression -->
   <xsl:template match="Expression|FirstExpression|SecondExpression|SearchCondition|ColumnReferenceExpression|BinaryExpression|StringLiteral|IntegerLiteral|NewValue|WhenExpression|ThenExpression|ElseExpression|Parameter|UnaryExpression|FunctionCall|NumericLiteral|ConvertCall">
+  <xsl:if test="@FirstTokenType='Not' and *[1]/@FirstTokenType!='Not'">
+    <xsl:text> NOT </xsl:text>
+  </xsl:if>  
   <xsl:choose>
       <xsl:when test="@ColumnType='Regular'">
         <xsl:apply-templates select="MultiPartIdentifier" />
@@ -129,7 +132,7 @@
         </xsl:for-each>
         <xsl:text>)</xsl:text>
       </xsl:when>
-      <xsl:when test="@Style or local-name() = 'ConvertCall'">
+      <xsl:when test="@Style or local-name() = 'ConvertCall' or (@FirstTokenType='Convert' and ./DataType)">
         <xsl:text>CAST(</xsl:text>
         <xsl:apply-templates select="Parameter"/>
         <xsl:text> AS </xsl:text>
