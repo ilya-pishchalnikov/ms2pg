@@ -126,6 +126,9 @@
           <xsl:when test="ms2pg:ToLower(FunctionName/@Value) = 'getdate'">
             <xsl:text>now</xsl:text>
           </xsl:when>
+          <xsl:when test="ms2pg:ToLower(FunctionName/@Value) = 'newid'">
+            <xsl:text>uuid_generate_v4</xsl:text>
+          </xsl:when>
           <xsl:otherwise>
             <xsl:value-of select="ms2pg:QuoteName(FunctionName/@Value)" />
           </xsl:otherwise>  
