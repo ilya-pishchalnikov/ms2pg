@@ -24,6 +24,15 @@ namespace ms2pg.PgDeploy
                                 + batch.Substring(position - plusSignIndex + 1);
                     }
                     break;
+                case """22P02""": // Invalid syntax for type
+                    if ((exception.Data["MessageText"] as string)!.Contains("integer: \"\""))
+                    {
+                        var position = (int) exception.Data["Position"]!;
+                        string beforeErrorBatchPart = batch.Substring(0, position - 1);
+                        fixedBatch = beforeErrorBatchPart.Substring(0, position - 1) + "0"
+                                + batch.Substring(position + 1);
+                    }
+                    break;
             }
             if (fixedBatch != null )
             {
