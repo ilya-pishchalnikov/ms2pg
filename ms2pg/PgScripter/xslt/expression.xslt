@@ -20,6 +20,13 @@
     <xsl:text> NOT </xsl:text>
   </xsl:if>  
   <xsl:choose>
+      <xsl:when test="@Style and DataType[@SqlDataTypeOption='DateTime']
+                             and Parameter/FunctionName[ms2pg:ToLower(@Value) = 'floor']
+                             and Parameter/Parameters/ConvertCall[DataType/@SqlDataTypeOption='Float']">
+        <xsl:text>CAST (</xsl:text>
+        <xsl:apply-templates select="Parameter/Parameters/ConvertCall[DataType/@SqlDataTypeOption='Float']/Parameter"/>
+        <xsl:text> AS DATE)</xsl:text>
+      </xsl:when>
       <xsl:when test="@ColumnType='Regular'">
         <xsl:apply-templates select="MultiPartIdentifier" />
       </xsl:when>
