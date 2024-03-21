@@ -40,6 +40,16 @@
         <xsl:text> &lt; </xsl:text>
         <xsl:apply-templates select="SecondExpression" />
       </xsl:when>
+      <xsl:when test="@ComparisonType='GreaterThanOrEqualTo'">
+        <xsl:apply-templates select="FirstExpression" />
+        <xsl:text> &gt;= </xsl:text>
+        <xsl:apply-templates select="SecondExpression" />
+      </xsl:when>
+      <xsl:when test="@ComparisonType='LessThanOrEqualTo'">
+        <xsl:apply-templates select="FirstExpression" />
+        <xsl:text> &lt;= </xsl:text>
+        <xsl:apply-templates select="SecondExpression" />
+      </xsl:when>
       <xsl:when test="@ComparisonType='Equals'">
         <xsl:apply-templates select="FirstExpression" />
         <xsl:text> = </xsl:text>
@@ -73,6 +83,11 @@
       <xsl:when test="@BinaryExpressionType='Subtract'">
         <xsl:apply-templates select="FirstExpression" />
         <xsl:text> - </xsl:text>
+        <xsl:apply-templates select="SecondExpression" />
+      </xsl:when>
+      <xsl:when test="@BinaryExpressionType='Divide'">
+        <xsl:apply-templates select="FirstExpression" />
+        <xsl:text> / </xsl:text>
         <xsl:apply-templates select="SecondExpression" />
       </xsl:when>
       <xsl:when test="@IsNot='False'">
