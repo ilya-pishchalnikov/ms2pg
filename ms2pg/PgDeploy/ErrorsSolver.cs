@@ -52,7 +52,7 @@ namespace ms2pg.PgDeploy
                 beforeErrorBatchPart = batch.Substring(0, position > 0 ? position-1 : 0);
                 fixedBatch = beforeErrorBatchPart 
                         + $"/*!ERROR HERE!: '{exception.Data["SqlState"] as string}:{exception.Data["MessageText"] as string}'*/"
-                        + batch.Substring(position);
+                        + batch.Substring(position-1);
                 batches[batchIndex] = fixedBatch;
                 File.WriteAllText(fileName, batches.Aggregate((x,y) => x + "\n{{GO}}\n" + y));
                 return false;
