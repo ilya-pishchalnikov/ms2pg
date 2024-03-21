@@ -76,6 +76,21 @@ namespace ms2pg.MsParser
 
             var parseResultXml = serializer.Serialize(parseResult);
 
+            var elementsWithTokens = parseResultXml.SelectNodes("//*[@FirstTokenIndex]");
+
+            var TokensList = parseResult.ScriptTokenStream
+                    .Select (x => new {x.Text, TokenType = x.TokenType.ToString()})
+                    .ToList();
+
+            foreach (XmlElement element in elementsWithTokens!)
+            {
+                var tokenIndex = Int32.Parse(element.Attributes["FirstTokenIndex"]?.Value!);
+                if (tokenIndex >= 0)
+                {
+                    element.SetAttribute("FirstTokenType", TokensList[tokenIndex].TokenType);
+                    element.SetAttribute("FirstTokenText", TokensList[tokenIndex].Text);
+                }
+            }       
 
             var parseResultXmlString = new StringBuilder();
             var settings = new XmlWriterSettings

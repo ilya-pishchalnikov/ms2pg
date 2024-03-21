@@ -138,11 +138,12 @@
       </xsl:when>
       <xsl:when test="@NotDefined">
         <xsl:apply-templates select="Expression"/>
-        <xsl:if test="@NotDefined = 'False'">
+        <xsl:if test="@NotDefined = 'True'">
           <xsl:text> NOT </xsl:text>          
         </xsl:if>
         <xsl:text> IN </xsl:text>
-        <xsl:apply-templates select="Subquery"/>        
+        <xsl:apply-templates select="Subquery"/>  
+        <xsl:apply-templates select="Values"/>      
       </xsl:when>
       <xsl:when test="@UnaryExpressionType">
         <xsl:choose>
@@ -174,8 +175,14 @@
         <xsl:call-template name="_IndentDec" />
         <xsl:call-template name="_LineBreak" />
         <xsl:text>END</xsl:text>
+      </xsl:when>      
+      <xsl:when test="ms2pg:ToLower(@FirstTokenText)='cast'">        
+        <xsl:text>CAST(</xsl:text>
+        <xsl:apply-templates select="Parameter"/>
+        <xsl:text> AS </xsl:text>
+        <xsl:apply-templates select="DataType"/>
+        <xsl:text>)</xsl:text>
       </xsl:when>
-
       <xsl:when test="not(@Value)">
         <xsl:text>(</xsl:text>
           <xsl:apply-templates select="Expression" />
@@ -192,39 +199,17 @@
     <xsl:apply-templates select="Identifiers" />
   </xsl:template>
   
-
-  <!-- ConvertCall -->
-<!--   <xsl:template match="ConvertCall">
-    <xsl:text>/*CONVERT*/</xsl:text>
-    <xsl:choose>
-      <xsl:when test="Style/@Value">
-        <xsl:text>convert('</xsl:text>
-        <xsl:value-of select="DataType/@SqlDataTypeOption" />
-        <xsl:text>', </xsl:text>
-        <xsl:value-of select="DataType/Parameters/IntegerLiteral[1]/@Value" />
-        <xsl:text>', </xsl:text>
-        <xsl:choose>
-          <xsl:when test="count(DataType/Parameters) > 1">
-            <xsl:value-of select="DataType/Parameters/IntegerLiteral[2]/@Value" />
-          </xsl:when>
-          <xsl:otherwise>
-            <xsl:text>-1</xsl:text>
-          </xsl:otherwise>
-        </xsl:choose>
-        <xsl:text>', CAST(</xsl:text>
-        <xsl:value-of select="Paramenter"></xsl:value-of>         
-        <xsl:text>)</xsl:text>
-      </xsl:when>
-      <xsl:otherwise>        
-        <xsl:text>CAST (</xsl:text>
-          <xsl:apply-templates select="Parameter/MultiPartIdentifier/Identifiers" />
-          <xsl:text> AS </xsl:text>
-          <xsl:apply-templates select="DataType" />
-        <xsl:text>)</xsl:text>
-      </xsl:otherwise>
-    </xsl:choose>
-    <xsl:apply-templates select="DataType" />
-  </xsl:template> -->
+  <!-- values clause -->  
+  <xsl:template match="Values">
+    <xsl:text>(</xsl:text>    
+    <xsl:for-each select="*">
+      <xsl:if test="position()>1">
+        <xsl:text>, </xsl:text>
+      </xsl:if>
+      <xsl:apply-templates select="." />
+    </xsl:for-each>
+    <xsl:text>)</xsl:text>    
+  </xsl:template>
 
   <!-- Identifiers -->
   <xsl:template match="Identifiers">
