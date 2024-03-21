@@ -145,8 +145,14 @@
           <xsl:text> NOT </xsl:text>          
         </xsl:if>
         <xsl:text> IN </xsl:text>
-        <xsl:apply-templates select="Subquery"/>  
-        <xsl:apply-templates select="Values"/>      
+        <xsl:choose>
+          <xsl:when test="Subquery/*[1]">
+            <xsl:apply-templates select="Subquery"/> 
+          </xsl:when>
+          <xsl:when test="Values/*[1]">
+            <xsl:apply-templates select="Subquery"/>  
+          </xsl:when>
+        </xsl:choose>         
       </xsl:when>
       <xsl:when test="@UnaryExpressionType">
         <xsl:choose>

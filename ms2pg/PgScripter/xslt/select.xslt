@@ -7,13 +7,40 @@
   </xsl:template>  
 
   <!-- Query -->
-  <xsl:template match="QueryExpression">
-    <xsl:apply-templates select="SelectElements" />
-    <xsl:apply-templates select="FromClause" />
-    <xsl:apply-templates select="WhereClause" />
-    <xsl:apply-templates select="GroupByClause" />
-    <xsl:apply-templates select="HavingClause" />
-    <xsl:apply-templates select="OrderByClause" />
+  <xsl:template match="QueryExpression|FirstQueryExpression|SecondQueryExpression">
+    <xsl:choose>
+      <xsl:when test="@BinaryQueryExpressionType">
+        <xsl:apply-templates select="FirstQueryExpression"/>
+        <xsl:call-template name="_LineBreak" />
+        <xsl:choose>
+          <xsl:when test="@BinaryQueryExpressionType='Union'">
+            <xsl:text>UNION</xsl:text>    
+            <xsl:if test="@All = 'True'">
+              <xsl:text> ALL</xsl:text>
+            </xsl:if>
+          </xsl:when>
+          <xsl:when test="@BinaryQueryExpressionType='Except'">
+            <xsl:text> EXCEPT </xsl:text>            
+          </xsl:when>
+          <xsl:when test="@BinaryQueryExpressionType='Intersect'">
+            <xsl:text> INTERSECT </xsl:text>            
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:value-of select="@BinaryQueryExpressionType"/>
+          </xsl:otherwise>
+        </xsl:choose>
+        <xsl:call-template name="_LineBreak" />        
+        <xsl:apply-templates select="SecondQueryExpression"/>
+      </xsl:when>
+      <xsl:otherwise>        
+        <xsl:apply-templates select="SelectElements" />
+        <xsl:apply-templates select="FromClause" />
+        <xsl:apply-templates select="WhereClause" />
+        <xsl:apply-templates select="GroupByClause" />
+        <xsl:apply-templates select="HavingClause" />
+        <xsl:apply-templates select="OrderByClause" />
+      </xsl:otherwise>
+    </xsl:choose>
   </xsl:template>  
 
   <!-- Select clause -->
@@ -156,7 +183,9 @@
           <xsl:apply-templates select="SchemaObject" />
         </xsl:when>
         <xsl:when test="QueryExpression">
-          <xsl:apply-templates select="."/>
+          <xsl:text>(</xsl:text>
+          <xsl:apply-templates select="*"/>
+          <xsl:text>)</xsl:text>
         </xsl:when>
         <xsl:when test="FirstTableReference|SecondTableReference">
           <xsl:call-template name="_IndentInc" />
