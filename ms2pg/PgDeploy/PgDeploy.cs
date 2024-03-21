@@ -126,6 +126,9 @@ namespace ms2pg.PgDeploy
                             File.WriteAllText("errors.sql", batches.Aggregate( (x, y) => x + "\n\n/*GO*/\n\n" + y));
                             throw new ApplicationException($"Error count exceeds limit. Undeployed batches ({batches.Count}) saved to errors.sql");
                         }
+                        if (ErrorCount > batches.Count * batches.Count){
+                            ErrorCount = batches.Count * batches.Count;
+                        }
                     }
                 }
             }

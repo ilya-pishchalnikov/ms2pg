@@ -14,16 +14,67 @@ namespace ms2pg.PgDeploy
             string fixedBatch = null;
             int position = 1;
             var beforeErrorBatchPart = string.Empty;
+            var afterErrorBatchPart = string.Empty;
             switch(exception.Data["SqlState"])
             {
                 case "42883": // Operator does not exist
-                    if ((exception.Data["MessageText"] as string)!.Contains("character varying + character varying"))
+                    var messageText = exception.Data["MessageText"] as string;
+                    
+                    if (Regex.IsMatch(messageText!, @"(character varying|text) \+ (character varying|text)"))
                     {
+
                         position = (int) exception.Data["Position"]!;
+                        beforeErrorBatchPart = batch.Substring(0, position - 1);
+                        afterErrorBatchPart = batch.Substring(position);
+                        fixedBatch = beforeErrorBatchPart + " || " + afterErrorBatchPart;
+                    }
+                    else if (Regex.IsMatch(messageText!, "integer [+-=><] (character varying|character|text)"))
+                    {
+                        
+                        position = (int) exception.Data["Position"]!;                        
+                        beforeErrorBatchPart = new string (batch.Substring(0, position - 1).Reverse().ToArray());
+                        afterErrorBatchPart = batch.Substring(position - 1);
+
+                        var match = Regex.Match(beforeErrorBatchPart, @"^[ \t\r\n]*(\d+|[0-9a-zA-Z_#]+([ \t\r\n]*\.+[ \t\r\n]*[0-9a-zA-Z_#]+)*)");
+                        
+                        if (match.Success) 
+                        {
+                            beforeErrorBatchPart = new string(beforeErrorBatchPart.Reverse().ToArray());
+                            fixedBatch = beforeErrorBatchPart.Substring(0, beforeErrorBatchPart.Length - match.Length)
+                                                 + " CAST(" 
+                                                 + beforeErrorBatchPart.Substring(beforeErrorBatchPart.Length - match.Length, match.Length)
+                                                 + " AS VARCHAR) "
+                                                 + afterErrorBatchPart;
+                        }
+                    } 
+                    else if (Regex.IsMatch(messageText!, "(character varying|character|text) [+-=><] integer"))
+                    {
+                        
+                        position = (int) exception.Data["Position"]!;                        
                         beforeErrorBatchPart = batch.Substring(0, position);
-                        var plusSignIndex = Regex.Match(new string(beforeErrorBatchPart.Reverse().ToArray()), "/+").Index;
-                        fixedBatch = beforeErrorBatchPart.Substring(0, position - plusSignIndex - 1) + "|| "
-                                + batch.Substring(position - plusSignIndex + 1);
+                        afterErrorBatchPart = batch.Substring(position);
+
+                        var match = Regex.Match(afterErrorBatchPart, @"^[ \t\r\n]*(\d+|[0-9a-zA-Z_#]+([ \t\r\n]*\.+[ \t\r\n]*[0-9a-zA-Z_#]+)*)");
+                        
+                        if (match.Success) 
+                        {
+                            
+                            fixedBatch = beforeErrorBatchPart  
+                                        + " CAST(" 
+                                        + afterErrorBatchPart.Substring(0, match.Length)
+                                        + " AS VARCHAR) "        
+                                        + afterErrorBatchPart.Substring(match.Length);
+                        }
+                    } 
+                    break;
+                case "22007": // 
+                    position = (int) exception.Data["Position"]!;
+                    beforeErrorBatchPart = batch.Substring(0, position - 1);
+                    afterErrorBatchPart = batch.Substring(position - 1);
+                    if (afterErrorBatchPart.StartsWith("''"))
+                    {
+                        fixedBatch = beforeErrorBatchPart + "null"
+                                + batch.Substring(position + 1);
                     }
                     break;
                 case "22P02": // 
@@ -50,7 +101,8 @@ namespace ms2pg.PgDeploy
                     position = (int) exception.Data["Position"]!;
                 }
                 beforeErrorBatchPart = batch.Substring(0, position > 0 ? position-1 : 0);
-                fixedBatch = beforeErrorBatchPart 
+                fixedBatch = $"/*!ERROR IN BATCH!: '{exception.Data["SqlState"] as string}:{exception.Data["MessageText"] as string}'*/\n"
+                        + beforeErrorBatchPart 
                         + $"/*!ERROR HERE!: '{exception.Data["SqlState"] as string}:{exception.Data["MessageText"] as string}'*/"
                         + batch.Substring(position-1);
                 batches[batchIndex] = fixedBatch;

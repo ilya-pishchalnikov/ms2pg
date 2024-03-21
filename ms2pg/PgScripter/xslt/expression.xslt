@@ -90,6 +90,11 @@
         <xsl:text> / </xsl:text>
         <xsl:apply-templates select="SecondExpression" />
       </xsl:when>
+      <xsl:when test="@BinaryExpressionType='Modulo'">
+        <xsl:apply-templates select="FirstExpression" />
+        <xsl:text> % </xsl:text>
+        <xsl:apply-templates select="SecondExpression" />
+      </xsl:when>
       <xsl:when test="@IsNot='False'">
         <xsl:apply-templates select="FirstExpression" />
         <xsl:apply-templates select="Expression" />
@@ -178,7 +183,7 @@
             <xsl:apply-templates select="Subquery"/> 
           </xsl:when>
           <xsl:when test="Values/*[1]">
-            <xsl:apply-templates select="Subquery"/>  
+            <xsl:apply-templates select="Values"/>  
           </xsl:when>
         </xsl:choose>         
       </xsl:when>

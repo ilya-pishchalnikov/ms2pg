@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+ xmlns:ms2pg="urn:ms2pg"  
+>
 
   <!-- Alter table add statement -->
   <xsl:template match="AlterTableAddTableElementStatement">
@@ -76,23 +78,31 @@
     <xsl:apply-templates select="./Expression" />
   </xsl:template>
 
-    <!-- Unique constraint -->
-    <xsl:template match="UniqueConstraintDefinition">
-      <xsl:apply-templates select="ConstraintIdentifier" />
-      <xsl:choose>
-        <xsl:when test="@IsPrimaryKey='True'">
-          <xsl:text>PRIMARY KEY </xsl:text>
-        </xsl:when>
-        <xsl:otherwise>
-          <xsl:text>UNIQUE </xsl:text>
-        </xsl:otherwise>
-      </xsl:choose>
-      <xsl:text>(</xsl:text>
-      <xsl:value-of select="Columns/ColumnWithSortOrder/Column/MultiPartIdentifier/Identifiers/Identifier/@Value"></xsl:value-of>
-      <xsl:text>)</xsl:text>
-      <xsl:call-template name="_LineBreak" />
-    </xsl:template>
+  <!-- Unique constraint -->
+  <xsl:template match="UniqueConstraintDefinition">
+    <xsl:apply-templates select="ConstraintIdentifier" />
+    <xsl:choose>
+      <xsl:when test="@IsPrimaryKey='True'">
+        <xsl:text>PRIMARY KEY </xsl:text>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:text>UNIQUE </xsl:text>
+      </xsl:otherwise>
+    </xsl:choose>
+    <xsl:text>(</xsl:text>
+    <xsl:apply-templates select="Columns" />
+    <xsl:text>)</xsl:text>
+    <xsl:call-template name="_LineBreak" />
+  </xsl:template>
 
+  <xsl:template match="Columns">
+    <xsl:for-each select="ColumnWithSortOrder">
+      <xsl:if test="position() > 1">
+        <xsl:text>, </xsl:text>
+      </xsl:if>
+      <xsl:apply-templates select="Column/MultiPartIdentifier"/>
+    </xsl:for-each>
+  </xsl:template>
 
   <!-- Foreign key constraint -->
   <xsl:template match="ForeignKeyConstraintDefinition">
@@ -105,7 +115,7 @@
     <!-- Constraint explicitly name -->
     <xsl:template match="ConstraintIdentifier">
       <xsl:text>CONSTRAINT </xsl:text>
-      <xsl:value-of select="./@Value" />   
+      <xsl:value-of select="ms2pg:QuoteName(./@Value)" />   
       <xsl:text> </xsl:text>     
     </xsl:template>
 
