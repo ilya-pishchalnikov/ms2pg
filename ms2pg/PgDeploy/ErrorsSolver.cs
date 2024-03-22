@@ -47,6 +47,24 @@ namespace ms2pg.PgDeploy
                                                  + afterErrorBatchPart;
                         }
                     } 
+                    else if (Regex.IsMatch(messageText!, @"timestamp with time zone [+\-] integer"))
+                    {
+                        
+                        position = (int) exception.Data["Position"]!;
+                        beforeErrorBatchPart = batch.Substring(0, position);
+                        afterErrorBatchPart = batch.Substring(position);
+
+                        var match = Regex.Match(afterErrorBatchPart, @"^[ \t\r\n]*\d+");
+                        
+                        if (match.Success) 
+                        {
+                            fixedBatch = beforeErrorBatchPart
+                                                 + "  INTERVAL '"
+                                                 + match.Value 
+                                                 + " day'"
+                                                 + afterErrorBatchPart.Substring(match.Length);
+                        }
+                    } 
                     else if (Regex.IsMatch(messageText!, "(character varying|character|text) [+-=><] integer"))
                     {
                         

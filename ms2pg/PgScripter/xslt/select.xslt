@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+  xmlns:ms2pg="urn:ms2pg"  >
   
   <!-- Select statement -->
   <xsl:template match="SelectStatement">
@@ -169,6 +170,11 @@
               <xsl:text>(</xsl:text>
               <xsl:apply-templates select="QueryDerivedTable/QueryExpression" />
               <xsl:text>)</xsl:text>
+              <xsl:if test="QueryDerivedTable/Alias/@Value != ''">
+                <xsl:text> AS </xsl:text>  
+                <xsl:value-of select="QueryDerivedTable/Alias/@Value"/>
+                <xsl:text> </xsl:text>
+              </xsl:if>
             </xsl:when>
             <xsl:otherwise>
               <xsl:text>/*UNKNOWN TABLE REFERENCE*/</xsl:text>
@@ -201,7 +207,7 @@
       <xsl:apply-templates select="NamedTableReference/SchemaObject" />
       <xsl:if test="Alias">
         <xsl:text> AS </xsl:text>
-        <xsl:value-of select="Alias/@Value"></xsl:value-of>
+        <xsl:value-of select="ms2pg:QuoteName(Alias/@Value)"></xsl:value-of>
       </xsl:if>
     </xsl:template>
 

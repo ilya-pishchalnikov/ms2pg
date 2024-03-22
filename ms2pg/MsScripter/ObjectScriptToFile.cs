@@ -26,7 +26,7 @@ namespace ms2pg.MsScripter
                     ColumnStoreIndexes = true,
                     ConvertUserDefinedDataTypesToBaseType = true,
                     Encoding = Encoding.UTF8,
-                    ExtendedProperties = true,
+                    ExtendedProperties = false,
                     FileName = path,
                     FullTextCatalogs = true,
                     FullTextIndexes = true,

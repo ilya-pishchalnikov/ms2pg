@@ -15,7 +15,7 @@
   </xsl:template>  
 
   <!-- Expression -->
-  <xsl:template match="Expression|FirstExpression|SecondExpression|SearchCondition|ColumnReferenceExpression|BinaryExpression|StringLiteral|IntegerLiteral|NewValue|WhenExpression|ThenExpression|ElseExpression|Parameter|UnaryExpression|FunctionCall|NumericLiteral|ConvertCall|InputExpression">
+  <xsl:template match="Expression|FirstExpression|SecondExpression|SearchCondition|ColumnReferenceExpression|BinaryExpression|StringLiteral|IntegerLiteral|NewValue|WhenExpression|ThenExpression|ElseExpression|Parameter|UnaryExpression|FunctionCall|NumericLiteral|ConvertCall|InputExpression|ThirdExpression">
   <xsl:if test="@FirstTokenType='Not' and *[1]/@FirstTokenType!='Not'">
     <xsl:text> NOT </xsl:text>
   </xsl:if>  
@@ -115,6 +115,13 @@
         <xsl:text> OR </xsl:text>
         <xsl:apply-templates select="SecondExpression" />
       </xsl:when>
+      <xsl:when test="@TernaryExpressionType='Between'">
+        <xsl:apply-templates select="FirstExpression" />
+        <xsl:text> BETWEEN </xsl:text>
+        <xsl:apply-templates select="SecondExpression" />
+        <xsl:text> AND </xsl:text>
+        <xsl:apply-templates select="ThirdExpression" />
+      </xsl:when>
       <xsl:when test="@LiteralType='String'">
         <xsl:text>'</xsl:text>
         <xsl:value-of select="@Value"></xsl:value-of>
@@ -138,7 +145,7 @@
         <xsl:text>)</xsl:text>
         <xsl:call-template name="_IndentDec" />
       </xsl:when>
-      <xsl:when test="FunctionName">
+      <xsl:when test="FunctionName[ms2pg:ToLower(@Value) != 'month' and ms2pg:ToLower(@Value) != 'day' and ms2pg:ToLower(@Value) != 'datepart']">
         <xsl:choose>
           <xsl:when test="ms2pg:ToLower(FunctionName/@Value) = 'isnull'">
             <xsl:text>coalesce</xsl:text>
@@ -165,6 +172,25 @@
         </xsl:for-each>
         <xsl:text>)</xsl:text>
       </xsl:when>
+      <xsl:when test="FunctionName[ms2pg:ToLower(@Value) = 'month' or ms2pg:ToLower(@Value) = 'day']">
+        <xsl:text>EXTRACT(</xsl:text>
+        <xsl:value-of select="ms2pg:QuoteName(FunctionName/@Value)"/>
+        <xsl:text> FROM </xsl:text>
+        <xsl:for-each select="Parameters/*">
+          <xsl:if test="position()>1">
+            <xsl:text>, </xsl:text>
+          </xsl:if>
+          <xsl:apply-templates select="." />
+        </xsl:for-each>
+        <xsl:text>)</xsl:text>
+      </xsl:when>
+      <xsl:when test="FunctionName[ms2pg:ToLower(@Value) = 'datepart']">
+        <xsl:text>EXTRACT(</xsl:text>
+        <xsl:apply-templates select="Parameters/ColumnReferenceExpression[1]"/>
+        <xsl:text> FROM </xsl:text>
+        <xsl:apply-templates select="Parameters/ColumnReferenceExpression[2]"/>
+        <xsl:text>)</xsl:text>
+      </xsl:when>
       <xsl:when test="@Style or local-name() = 'ConvertCall' or (@FirstTokenType='Convert' and ./DataType)">
         <xsl:text>CAST(</xsl:text>
         <xsl:apply-templates select="Parameter"/>
@@ -172,7 +198,7 @@
         <xsl:apply-templates select="DataType"/>
         <xsl:text>)</xsl:text>
       </xsl:when>
-      <xsl:when test="@NotDefined">
+      <xsl:when test="@NotDefined and not (@OdbcEscape)">
         <xsl:apply-templates select="Expression"/>
         <xsl:if test="@NotDefined = 'True'">
           <xsl:text> NOT </xsl:text>          
@@ -187,6 +213,23 @@
           </xsl:when>
         </xsl:choose>         
       </xsl:when>
+
+      
+      <xsl:when test="@NotDefined and @OdbcEscape">
+        <xsl:apply-templates select="Expression"/>
+        <xsl:if test="@NotDefined = 'True'">
+          <xsl:text> NOT </xsl:text>          
+        </xsl:if>
+        <xsl:apply-templates select="FirstExpression"/>
+        <xsl:text> LIKE </xsl:text>
+        <xsl:apply-templates select="SecondExpression"/>
+        <xsl:if test="OdbcEscape='True'">
+          <xsl:text>ESCAPE '</xsl:text>
+          <xsl:value-of select="@EscapeExpression"/>
+          <xsl:text>'</xsl:text>
+        </xsl:if>        
+      </xsl:when>
+
       <xsl:when test="@UnaryExpressionType">
         <xsl:choose>
           <xsl:when test="@UnaryExpressionType='Negative'">
