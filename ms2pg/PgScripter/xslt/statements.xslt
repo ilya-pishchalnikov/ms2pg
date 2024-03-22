@@ -67,6 +67,10 @@
           <xsl:apply-templates select = "." />
           <xsl:call-template name="_EndOfStatement" />
         </xsl:when>
+        <xsl:when test="local-name() = 'CreateFunctionStatement'">
+          <xsl:apply-templates select = "." />
+          <xsl:call-template name="_EndOfStatement" />
+        </xsl:when>
         <xsl:otherwise>
           <xsl:call-template name ="_UnknownToken" />
           <xsl:call-template name="_LineBreak" />
@@ -186,6 +190,8 @@
       <xsl:text>'</xsl:text>
 
     </xsl:template>
+
+    
   
 
 </xsl:stylesheet>

@@ -11,6 +11,7 @@
   <xsl:import href="createview.xslt" />
   <xsl:import href="select.xslt" />
   <xsl:import href="expression.xslt" />
+  <xsl:import href="createfunction.xslt" />
   <xsl:import href="createprocedure.xslt" />
   
   

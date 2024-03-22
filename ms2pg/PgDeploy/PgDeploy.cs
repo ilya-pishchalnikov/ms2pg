@@ -36,8 +36,11 @@ namespace ms2pg.PgDeploy
                 {
                     continue;
                 }
-                files.AddRange(Directory.GetFiles(currentDirectory));
-                Directory.GetDirectories(currentDirectory).ToList().ForEach(directory => { directoryStack.Push(directory); });
+                if (Directory.Exists(currentDirectory))
+                {
+                    files.AddRange(Directory.GetFiles(currentDirectory));
+                    Directory.GetDirectories(currentDirectory).ToList().ForEach(directory => { directoryStack.Push(directory); });
+                }
             }
             return files;
         }
@@ -137,6 +140,10 @@ namespace ms2pg.PgDeploy
 
         private static void DeployBatch(Npgsql.NpgsqlConnection connection, string batch)
         {
+            if (String.IsNullOrEmpty(batch))
+            {
+                return;                                 
+            }
             using (var command = connection.CreateCommand())
             {
                 command.CommandText = batch;

@@ -13,6 +13,7 @@
     <None Remove="PgScripter\xslt\common.xslt" />
     <None Remove="PgScripter\xslt\createindex.xslt" />
     <None Remove="PgScripter\xslt\createprocedure.xslt" />
+    <None Remove="PgScripter\xslt\createfunction.xslt" />
     <None Remove="PgScripter\xslt\createtable.xslt" />
     <None Remove="PgScripter\xslt\createview.xslt" />
     <None Remove="PgScripter\xslt\datatypes.xslt" />
@@ -38,6 +39,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="PgScripter\xslt\createprocedure.xslt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PgScripter\xslt\createfunction.xslt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="PgScripter\xslt\createtable.xslt">

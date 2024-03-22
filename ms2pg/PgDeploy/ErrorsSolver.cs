@@ -95,6 +95,21 @@ namespace ms2pg.PgDeploy
                                 + batch.Substring(position + 1);
                     }
                     break;
+                case "42804":
+                    messageText = exception.Data["MessageText"] as string;
+                    if (Regex.IsMatch(messageText!, "(character varying|character|text) .+ integer"))
+                    {  
+                        position = (int) exception.Data["Position"]!;
+                        beforeErrorBatchPart = batch.Substring(0, position - 1);
+                        afterErrorBatchPart = batch.Substring(position - 1);                        
+                        var match = Regex.Match(afterErrorBatchPart, @"^[ \t\r\n]*(\d+|[0-9a-zA-Z_#]+([ \t\r\n]*\.+[ \t\r\n]*[0-9a-zA-Z_#]+)*)");
+                        if (match.Success)
+                        {
+                            fixedBatch = beforeErrorBatchPart + "CAST (" + match.Value + " AS VARCHAR) " 
+                                        + afterErrorBatchPart.Substring(match.Length);
+                        }
+                    }
+                    break;
                 case "22P02": // 
                     if ((exception.Data["MessageText"] as string)!.Contains("integer: \"\""))
                     {

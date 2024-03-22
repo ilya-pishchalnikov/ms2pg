@@ -1,14 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ms2pg-config>
-  <property name="ms-connection-string" value="Server=localhost;Database=lv;Integrated Security=true;Trust Server Certificate=true"/>
-  <property name="pg-connection-string" value="User ID=postgres;Password=postgres;Host=localhost;Port=5432;Database=ms2pg;"/>
-  <property name="ms-script-dir" value="script/ms"/>
-  <property name="ms-parsed-dir" value="script/ms"/>
-  <property name="pg-script-dir" value="script/pg"/>
-  <property name="xslt-file-name" value="PgScripter/xslt/ms2pg.xslt"/>
-  <property name="pg-deploy-dir-sequence" value=".pre,Table,View,UserDefinedFunction,StoredProcedure"/>
-  <property name="is-debug-messages" value="false"/>
+  <property name="ms-connection-string"                value="Server=localhost;Database=lv;Integrated Security=true;Trust Server Certificate=true"/>
+  <property name="pg-connection-string"                value="User ID=postgres;Password=postgres;Host=localhost;Port=5432;Database=ms2pg;"/>
+  <property name="ms-script-dir"                       value="script/ms"/>
+  <property name="ms-parsed-dir"                       value="script/ms"/>
+  <property name="pg-script-dir"                       value="script/pg"/>
+  <property name="xslt-file-name"                      value="PgScripter/xslt/ms2pg.xslt"/>
+  <property name="pg-deploy-dir-sequence"              value=".pre,Table,View,UserDefinedFunction,StoredProcedure"/>
+  <property name="is-debug-messages"                   value="false"/>
   <property name="is-xml-enumerables-name-like-parent" value="true"/>
-  <property name="excluded-properties" value="ScriptTokenStream"/>
-  <property name="file-name-contains-filters" value="V_LocPuttingNew"/>
+  <property name="excluded-properties"                 value="ScriptTokenStream"/>
+  <property name="file-name-contains-filters"          value=""/>
 </ms2pg-config>

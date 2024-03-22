@@ -145,7 +145,7 @@
         <xsl:text>)</xsl:text>
         <xsl:call-template name="_IndentDec" />
       </xsl:when>
-      <xsl:when test="FunctionName[ms2pg:ToLower(@Value) != 'month' and ms2pg:ToLower(@Value) != 'day' and ms2pg:ToLower(@Value) != 'datepart']">
+      <xsl:when test="FunctionName[ms2pg:ToLower(@Value) != 'month' and ms2pg:ToLower(@Value) != 'day' and ms2pg:ToLower(@Value) != 'datepart' and ms2pg:ToLower(@Value) != 'dateadd']">
         <xsl:choose>
           <xsl:when test="ms2pg:ToLower(FunctionName/@Value) = 'isnull'">
             <xsl:text>coalesce</xsl:text>
@@ -189,6 +189,16 @@
         <xsl:apply-templates select="Parameters/ColumnReferenceExpression[1]"/>
         <xsl:text> FROM </xsl:text>
         <xsl:apply-templates select="Parameters/ColumnReferenceExpression[2]"/>
+        <xsl:text>)</xsl:text>
+      </xsl:when>
+      <xsl:when test="FunctionName[ms2pg:ToLower(@Value) = 'dateadd']">
+        <xsl:text>(</xsl:text>
+        <xsl:apply-templates select="Parameters/*[3]"/>
+        <xsl:text> + INTERVAL '</xsl:text>
+        <xsl:apply-templates select="Parameters/*[2]"/>
+        <xsl:text> </xsl:text>
+        <xsl:apply-templates select="Parameters/*[1]"/>        
+        <xsl:text>'</xsl:text>
         <xsl:text>)</xsl:text>
       </xsl:when>
       <xsl:when test="@Style or local-name() = 'ConvertCall' or (@FirstTokenType='Convert' and ./DataType)">
