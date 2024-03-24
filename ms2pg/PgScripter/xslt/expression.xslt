@@ -1,31 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-  xmlns:msxsl="urn:schemas-microsoft-com:xslt" exclude-result-prefixes="msxsl"
-  xmlns:ms2pg="urn:ms2pg"  
->
+                xmlns:msxsl="urn:schemas-microsoft-com:xslt" exclude-result-prefixes="msxsl"
+                xmlns:ms2pg="urn:ms2pg"  
+  >
   <!-- Object Identifier dbo_ObjectName -->
   <xsl:template match="SchemaObjectName">
-    <xsl:if test="SchemaIdentifier">
-      <xsl:value-of select="ms2pg:QuoteName(SchemaIdentifier/@Value)" />
-      <xsl:text>.</xsl:text>
-    </xsl:if>
-    <xsl:if test="BaseIdentifier">
-      <xsl:value-of select="ms2pg:QuoteName(BaseIdentifier/@Value)" />
-    </xsl:if>
+    <xsl:apply-templates select="Identifiers"/>
   </xsl:template>  
+  
+  <xsl:template match="Expression">
+    <xsl:apply-templates select="*"/>    
+  </xsl:template>
 
+  <xsl:template match="ParenthesisExpression">
+        <xsl:text>(</xsl:text>
+        <xsl:apply-templates select="Expression"/>
+        <xsl:text>)</xsl:text>    
+  </xsl:template>
+
+    <xsl:template match="IntegerLiteral">
+        <xsl:apply-templates select="@value"/>
+  </xsl:template>
+
+  
   <!-- Expression -->
-  <xsl:template match="Expression|FirstExpression|SecondExpression|SearchCondition|ColumnReferenceExpression|BinaryExpression|StringLiteral|IntegerLiteral|Value|NewValue|WhenExpression|ThenExpression|ElseExpression|Parameter|UnaryExpression|FunctionCall|NumericLiteral|ConvertCall|InputExpression|ThirdExpression">
-  <xsl:if test="@FirstTokenType='Not' and *[1]/@FirstTokenType!='Not'">
-    <xsl:text> NOT </xsl:text>
-  </xsl:if>  
-  <xsl:choose>
+  <xsl:template match="FirstExpression|SecondExpression|SearchCondition|ColumnReferenceExpression|BinaryExpression|StringLiteral|IntegerLiteral|Value|NewValue|WhenExpression|ThenExpression|ElseExpression|Parameter|UnaryExpression|FunctionCall|NumericLiteral|ConvertCall|InputExpression|ThirdExpression|CastCall|VariableReference|Predicate">
+    <xsl:if test="@FirstTokenType='Not' and *[1]/@FirstTokenType!='Not'">
+      <xsl:text> NOT </xsl:text>
+    </xsl:if>  
+    <xsl:choose>
       <xsl:when test="@Style and DataType[@SqlDataTypeOption='DateTime']
-                             and Parameter/FunctionName[ms2pg:ToLower(@Value) = 'floor']
-                             and Parameter/Parameters/ConvertCall[DataType/@SqlDataTypeOption='Float']">
+        and Parameter/FunctionName[ms2pg:ToLower(@Value) = 'floor']
+        and Parameter/Parameters/ConvertCall[DataType/@SqlDataTypeOption='Float']">
         <xsl:text>CAST (</xsl:text>
         <xsl:apply-templates select="Parameter/Parameters/ConvertCall[DataType/@SqlDataTypeOption='Float']/Parameter"/>
         <xsl:text> AS DATE)</xsl:text>
+      </xsl:when>
+      <xsl:when test="VariableReference">
+        <xsl:value-of select="ms2pg:QuoteName(@Name)"/>
       </xsl:when>
       <xsl:when test="@ColumnType='Regular'">
         <xsl:apply-templates select="MultiPartIdentifier" />
@@ -64,9 +76,9 @@
         <xsl:apply-templates select="FirstExpression" />
         <xsl:choose>
           <xsl:when test="   descendant::node()[@BinaryExpressionType='Add']/FirstExpression[@LiteralType='String']
-                          or descendant::node()[@BinaryExpressionType='Add']/SecondExpression[@LiteralType='String'] 
-                          or ancestor-or-self::node()[@BinaryExpressionType='Add']/FirstExpression[@LiteralType='String'] 
-                          or ancestor-or-self::node()[@BinaryExpressionType='Add']/SecondExpression[@LiteralType='String']">
+            or descendant::node()[@BinaryExpressionType='Add']/SecondExpression[@LiteralType='String'] 
+            or ancestor-or-self::node()[@BinaryExpressionType='Add']/FirstExpression[@LiteralType='String'] 
+            or ancestor-or-self::node()[@BinaryExpressionType='Add']/SecondExpression[@LiteralType='String']">
             <xsl:text> || </xsl:text>
           </xsl:when>
           <xsl:otherwise>
@@ -201,13 +213,14 @@
         <xsl:text>'</xsl:text>"/>
         <xsl:text>)</xsl:text>
       </xsl:when>
-      <xsl:when test="@Style or local-name() = 'ConvertCall' or (@FirstTokenType='Convert' and ./DataType)">
+      <xsl:when test="@Style or local-name() = 'ConvertCall' or (@FirstTokenType='Convert' and ./DataType) or local-name() = 'CastCall'">
         <xsl:text>CAST(</xsl:text>
         <xsl:apply-templates select="Parameter"/>
         <xsl:text> AS </xsl:text>
         <xsl:apply-templates select="DataType"/>
         <xsl:text>)</xsl:text>
       </xsl:when>
+      
       <xsl:when test="@NotDefined and not (@OdbcEscape)">
         <xsl:apply-templates select="Expression"/>
         <xsl:if test="@NotDefined = 'True'">
@@ -223,7 +236,7 @@
           </xsl:when>
         </xsl:choose>         
       </xsl:when>
-
+      
       
       <xsl:when test="@NotDefined and @OdbcEscape">
         <xsl:apply-templates select="Expression"/>
@@ -239,7 +252,7 @@
           <xsl:text>'</xsl:text>
         </xsl:if>        
       </xsl:when>
-
+      
       <xsl:when test="@UnaryExpressionType">
         <xsl:choose>
           <xsl:when test="@UnaryExpressionType='Negative'">
@@ -256,10 +269,10 @@
         <xsl:apply-templates select="InputExpression"/>
         <xsl:call-template name="_IndentInc" />
         <xsl:for-each select="WhenClauses/SearchedWhenClause | WhenClauses/SimpleWhenClause">
-           <xsl:call-template name="_LineBreak" />
+          <xsl:call-template name="_LineBreak" />
           <xsl:text>WHEN </xsl:text>
           <xsl:apply-templates select="WhenExpression"/> 
-           <xsl:call-template name="_LineBreak" />  
+          <xsl:call-template name="_LineBreak" />  
           <xsl:text>THEN </xsl:text>
           <xsl:apply-templates select="ThenExpression"/>
         </xsl:for-each>
@@ -279,17 +292,21 @@
         <xsl:apply-templates select="DataType"/>
         <xsl:text>)</xsl:text>
       </xsl:when>
+      <xsl:when test="@FirstTokenType = 'Right'">        
+        <xsl:text>RIGHT</xsl:text>
+        <xsl:apply-templates select="Parameters"/>
+      </xsl:when>
       <xsl:when test="not(@Value)">
         <xsl:text>(</xsl:text>
-          <xsl:apply-templates select="Expression" />
+        <xsl:apply-templates select="Expression" />
         <xsl:text>)</xsl:text>
       </xsl:when>
       <xsl:otherwise>
-      <xsl:value-of select="@Value" />
-    </xsl:otherwise>
+        <xsl:value-of select="@Value" />
+      </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
-
+  
   <!-- MultiPartIdentifier -->  
   <xsl:template match="MultiPartIdentifier">
     <xsl:apply-templates select="Identifiers" />
@@ -306,7 +323,7 @@
     </xsl:for-each>
     <xsl:text>)</xsl:text>    
   </xsl:template>
-
+  
   <!-- Identifiers -->
   <xsl:template match="Identifiers">
     <xsl:for-each select="Identifier">
@@ -316,25 +333,35 @@
       <xsl:apply-templates select="." />
     </xsl:for-each>
   </xsl:template>
-
-
+  
+  
   <!-- Identifier -->
   <xsl:template match="Identifier">
     <xsl:value-of select="ms2pg:QuoteName(@Value)"></xsl:value-of>
   </xsl:template>
-
-
+  
+  
   <!-- Variable name -->
   <xsl:template match="VariableName">
     <xsl:text>var</xsl:text>
     <xsl:value-of select="translate(@Value,'@', '_')" />
   </xsl:template> 
-
+  
   <!-- Variable name -->
   <xsl:template match="Variable">
     <xsl:text>var</xsl:text>
     <xsl:value-of select="translate(@Name,'@', '_')" />
   </xsl:template>
-
-
+  
+  <xsl:template match="Parameters">
+    <xsl:text>(</xsl:text>    
+    <xsl:for-each select="*">
+      <xsl:if test="position()>1">
+        <xsl:text>, </xsl:text>
+      </xsl:if>
+      <xsl:apply-templates select="." />
+    </xsl:for-each>
+    <xsl:text>)</xsl:text>    
+  </xsl:template>
+  
 </xsl:stylesheet>

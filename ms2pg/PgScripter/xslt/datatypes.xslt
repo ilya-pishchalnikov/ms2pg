@@ -2,10 +2,13 @@
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
   xmlns:msxsl="urn:schemas-microsoft-com:xslt" exclude-result-prefixes="msxsl"
 >
-  <!-- Data type -->
   <xsl:template match="DataType">
+    <xsl:apply-templates select="SqlDataTypeReference"/>
+  </xsl:template>
+  <!-- Data type -->
+  <xsl:template match="SqlDataTypeReference">
     <xsl:variable name="datatype">
-      <xsl:apply-templates select="Name/Identifiers" />
+      <xsl:apply-templates select="Name/SchemaObjectName" />
     </xsl:variable>
     <xsl:variable name="pgType">
       <xsl:choose>

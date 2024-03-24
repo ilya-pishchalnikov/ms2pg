@@ -5,7 +5,7 @@
 
   <!-- Alter table add statement -->
   <xsl:template match="AlterTableAddTableElementStatement">
-    <xsl:variable name="if_exists" select="Definition/TableConstraints/UniqueConstraintDefinition[@IsPrimaryKey='True']
+    <xsl:variable name="if_exists" select="Definition/TableDefinition/TableConstraints/UniqueConstraintDefinition[@IsPrimaryKey='True']
       and $create_primary_key_if_not_exists" />
     <xsl:if test="$if_exists">      
       <xsl:call-template name="_DoBegin" />
@@ -30,7 +30,7 @@
     <xsl:text>ALTER TABLE </xsl:text>
     <xsl:apply-templates select="SchemaObjectName" />
     <xsl:text> </xsl:text>
-    <xsl:apply-templates select="Definition/TableConstraints" />
+    <xsl:apply-templates select="Definition/TableDefinition/TableConstraints" />
     <xsl:if test="$if_exists">
       <xsl:call-template name="_IndentDec" />
       <xsl:text>;END IF;</xsl:text>
@@ -73,7 +73,7 @@
   <!-- Default constraint -->
   <xsl:template match="DefaultConstraintDefinition">
     <xsl:text>ALTER COLUMN </xsl:text>
-    <xsl:value-of select="./Column/@Value" />    
+    <xsl:apply-templates select="Column/Identifier"/>    
     <xsl:text> SET DEFAULT </xsl:text>
     <xsl:apply-templates select="./Expression" />
   </xsl:template>
@@ -100,7 +100,7 @@
       <xsl:if test="position() > 1">
         <xsl:text>, </xsl:text>
       </xsl:if>
-      <xsl:apply-templates select="Column/MultiPartIdentifier"/>
+      <xsl:apply-templates select="Column/ColumnReferenceExpression/MultiPartIdentifier"/>
     </xsl:for-each>
   </xsl:template>
 
@@ -115,7 +115,7 @@
     <!-- Constraint explicitly name -->
     <xsl:template match="ConstraintIdentifier">
       <xsl:text>CONSTRAINT </xsl:text>
-      <xsl:value-of select="ms2pg:QuoteName(./@Value)" />   
+      <xsl:apply-templates select="Identifier"/>  
       <xsl:text> </xsl:text>     
     </xsl:template>
 

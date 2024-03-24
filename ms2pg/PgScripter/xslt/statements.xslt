@@ -83,6 +83,14 @@
           <xsl:apply-templates select = "." />
           <xsl:call-template name="_EndOfStatement" />
         </xsl:when>
+        <xsl:when test="local-name() = 'SetVariableStatement'">
+          <xsl:apply-templates select = "." />
+          <xsl:call-template name="_EndOfStatement" />
+        </xsl:when>
+        <xsl:when test="local-name() = 'IfStatement'">
+          <xsl:apply-templates select = "." />
+          <xsl:call-template name="_EndOfStatement" />
+        </xsl:when>
         <xsl:otherwise>
           <xsl:call-template name ="_UnknownToken" />
           <xsl:call-template name="_LineBreak" />
@@ -223,5 +231,34 @@
     <xsl:text>RETURN </xsl:text>
     <xsl:apply-templates select="Expression"/>
   </xsl:template>
+  
+  <xsl:template match="SetVariableStatement">
+    <xsl:apply-templates select="Variable"/>
+    <xsl:text> := </xsl:text>
+    <xsl:apply-templates select="Expression"/>
+  </xsl:template>
+  <!--xsl:template match="IfStatement">
+    <xsl:text>IF </xsl:text>
+    <xsl:apply-templates select="Predicate"/>
+    <xsl:call-template name="_LineBreak" />
+    <xsl:text>THEN</xsl:text>
+    <xsl:call-template name="_IndentInc" />
+    <xsl:call-template name="_LineBreak" />    
+    <xsl:apply-templates select="ThenStatement"/>
+    <xsl:call-template name="_IndentDec" />
+    <xsl:call-template name="_LineBreak" />  
+    <xsl:if test="ElseStatement">
+      <xsl:text>ELSE</xsl:text>
+      <xsl:call-template name="_IndentInc" />
+      <xsl:call-template name="_LineBreak" /> 
+      <xsl:apply-templates select="ElseStatement"/>
+      <xsl:call-template name="_IndentDec" />
+      <xsl:call-template name="_LineBreak" />  
+    </xsl:if>
+    <xsl:text>END IF</xsl:text>
+    <xsl:call-template name="_LineBreak" /> 
+  </xsl:template-->
+
+
 
 </xsl:stylesheet>

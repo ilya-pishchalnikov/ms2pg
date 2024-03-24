@@ -11,13 +11,13 @@
     <xsl:text>CREATE TABLE </xsl:text>
     <xsl:if test = "$create_table_if_not_exists">IF NOT EXISTS </xsl:if>
     <xsl:apply-templates select="SchemaObjectName"/>
-    <xsl:apply-templates select="Definition" />
+    <xsl:apply-templates select="Definition/TableDefinition" />
   </xsl:template>   
 
   <!-- TODO: inline index creation while table creating -->
   
   <!-- Table columns definition -->
-  <xsl:template match="Definition">
+  <xsl:template match="TableDefinition">
     <xsl:text>(</xsl:text>
     <xsl:call-template name = "_IndentInc" />
     <xsl:call-template name = "_IndentInc" />
@@ -40,7 +40,7 @@
 
   <!-- Table column definition -->
   <xsl:template match="ColumnDefinition">
-    <xsl:value-of select="ms2pg:QuoteName(ColumnIdentifier/@Value)" />
+    <xsl:value-of select="ms2pg:QuoteName(ColumnIdentifier/Identifier/@Value)" />
     <xsl:text> </xsl:text>
     <xsl:apply-templates select="DataType"/>
     <xsl:text> </xsl:text>

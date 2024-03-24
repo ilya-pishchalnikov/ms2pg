@@ -124,6 +124,12 @@ namespace ms2pg.MsParser
                 return currentElement;
             }
 
+            var childElement1 = currentElement.OwnerDocument.CreateElement(obj.GetType().Name);
+            if (currentElement.Name != childElement1.Name)
+            {
+                currentElement.AppendChild(childElement1);
+                currentElement = childElement1;
+            }
             foreach (var property in obj.GetType().GetProperties().Where(p => p.CanRead && p.GetIndexParameters().Length == 0))
             {
                 try
@@ -157,11 +163,6 @@ namespace ms2pg.MsParser
                             elementName = property.GetType().Name;
                         }
 
-                        if (IsIgnoreUntypedProperties && property.GetType().Name == "RuntimePropertyInfo") 
-                        {
-                            Serialize(property.GetValue(obj)!, currentElement);
-                            continue;
-                        }
                         var childElement = currentElement.OwnerDocument.CreateElement(elementName);
                         currentElement.AppendChild(childElement);
                         Serialize(property.GetValue(obj)!, childElement);
