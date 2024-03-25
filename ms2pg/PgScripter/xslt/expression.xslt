@@ -75,9 +75,6 @@
 
   <xsl:template match="BinaryExpression">
     <xsl:apply-templates select="FirstExpression"/>
-    <xsl:call-template name="_IndentInc" />
-    <xsl:call-template name="_LineBreak" />
-    <xsl:call-template name="_IndentDec" />
     <xsl:choose>
       <xsl:when test="@BinaryExpressionType='Add'">
         <xsl:text> + </xsl:text>
@@ -118,6 +115,21 @@
   <xsl:template match="ColumnReferenceExpression">
     <xsl:apply-templates select="MultiPartIdentifier"/>
   </xsl:template>
+  
+  <xsl:template match="UnaryExpression">
+    <xsl:choose>
+      <xsl:when test="@UnaryExpressionType='Negative'">
+        <xsl:text>-</xsl:text>        
+      </xsl:when>
+      <xsl:when test="@UnaryExpressionType='Positive'">
+        <xsl:text>+</xsl:text>        
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:text>!UNKNOWN UNARY EXPRESSION TYPE!</xsl:text>
+      </xsl:otherwise>
+    </xsl:choose>
+    <xsl:apply-templates select="Expression"/>
+  </xsl:template>
 
   <xsl:template match="FunctionCall">
     <xsl:variable name="function_name" select="ms2pg:ToLower(FunctionName/Identifier/@Value)"/>
@@ -128,6 +140,21 @@
         <xsl:text> FROM </xsl:text>
         <xsl:apply-templates select="Parameters"/>
         <xsl:text>)</xsl:text>
+      </xsl:when>
+      <xsl:when test="$function_name='datepart'">
+        <xsl:text>EXTRACT (</xsl:text>
+        <xsl:apply-templates select="Parameters/ColumnReferenceExpression[1]/MultiPartIdentifier/Identifiers"/>
+        <xsl:text> FROM </xsl:text>
+        <xsl:apply-templates select="Parameters/ColumnReferenceExpression[2]/MultiPartIdentifier/Identifiers"/>
+        <xsl:text>)</xsl:text>
+      </xsl:when>
+      <xsl:when test="$function_name='dateadd'">
+        <xsl:apply-templates select="Parameters/*[3]"/>
+        <xsl:text> + INTERVAL '</xsl:text>
+        <xsl:apply-templates select="Parameters/*[2]"/>
+        <xsl:text> </xsl:text>
+        <xsl:apply-templates select="Parameters/*[1]"/>
+        <xsl:text>'</xsl:text>
       </xsl:when>
     <xsl:otherwise>      
       <xsl:choose>
@@ -154,12 +181,24 @@
     </xsl:choose>
   </xsl:template>
 
-  <xsl:template match="ConvertCall">
-    <xsl:text>CAST(</xsl:text>
-    <xsl:apply-templates select="Parameter"/>
-    <xsl:text> AS </xsl:text>
-    <xsl:apply-templates select="DataType"/>
-    <xsl:text>)</xsl:text>
+  <xsl:template match="ConvertCall|CastCall">
+    <xsl:choose>
+      <xsl:when test="DataType/SqlDataTypeReference/@SqlDataTypeOption='DateTime'
+        and ms2pg:ToLower(Parameter/FunctionCall/FunctionName/Identifier/@Value) = 'floor'
+        and Parameter/FunctionCall/Parameters/ConvertCall/DataType/SqlDataTypeReference/@SqlDataTypeOption='Float'"
+        >
+        <xsl:text>date_trunc ('day', </xsl:text>
+        <xsl:apply-templates select="Parameter/FunctionCall/Parameters/ConvertCall/Parameter"/>
+        <xsl:text>)</xsl:text>
+      </xsl:when>
+      <xsl:otherwise>        
+        <xsl:text>CAST(</xsl:text>
+        <xsl:apply-templates select="Parameter"/>
+        <xsl:text> AS </xsl:text>
+        <xsl:apply-templates select="DataType"/>
+        <xsl:text>)</xsl:text>
+      </xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
 
   <xsl:template match="BooleanTernaryExpression[@TernaryExpressionType='Between']">
@@ -214,6 +253,10 @@
     <xsl:apply-templates select="FirstExpression"/>
     <xsl:text> LIKE </xsl:text>
     <xsl:apply-templates select="SecondExpression"/>
+  </xsl:template>
+  
+  <xsl:template match="Predicate">
+    <xsl:apply-templates select="*"/>
   </xsl:template>
   
   <xsl:template match="InPredicate">
@@ -556,11 +599,15 @@
   <!-- Variable name -->
   <xsl:template match="VariableName">
     <xsl:text>var</xsl:text>
-    <xsl:value-of select="translate(@Value,'@', '_')" />
+    <xsl:value-of select="ms2pg:QuoteName(translate(Identifier/@Value,'@', '_'))" />
   </xsl:template> 
   
   <!-- Variable name -->
   <xsl:template match="Variable">
+    <xsl:apply-templates select="VariableReference"/>
+  </xsl:template>
+
+  <xsl:template match="VariableReference">
     <xsl:text>var</xsl:text>
     <xsl:value-of select="translate(@Name,'@', '_')" />
   </xsl:template>
@@ -576,6 +623,14 @@
 
   <xsl:template match="Parameter">
     <xsl:apply-templates select="*"/>
+  </xsl:template>
+
+  <xsl:template match="NullIfExpression">
+    <xsl:text>nullif(</xsl:text>
+    <xsl:apply-templates select="FirstExpression"/>
+    <xsl:text>, </xsl:text>
+    <xsl:apply-templates select="SecondExpression"/>
+    <xsl:text>)</xsl:text>
   </xsl:template>
   
 </xsl:stylesheet>

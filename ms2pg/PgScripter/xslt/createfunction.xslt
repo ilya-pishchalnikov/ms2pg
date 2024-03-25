@@ -5,7 +5,7 @@
   <!-- Create procedure statement -->
   <xsl:template match="CreateFunctionStatement|CreateOrAlterFunctionStatement">
     <xsl:text>CREATE OR REPLACE FUNCTION </xsl:text>
-    <xsl:apply-templates select="Name/Identifiers" />
+    <xsl:apply-templates select="Name/SchemaObjectName/Identifiers" />
 
     <xsl:text>(</xsl:text>
     <xsl:call-template name="_IndentInc"></xsl:call-template>
@@ -30,13 +30,16 @@
     <xsl:call-template name="_LineBreak"></xsl:call-template>
     <xsl:text>RETURNS </xsl:text>
     <xsl:choose>
-      <xsl:when test="ReturnType/DataType">
-        <xsl:apply-templates select="ReturnType/DataType"/>
+      <xsl:when test="ReturnType/ScalarFunctionReturnType/DataType">
+        <xsl:apply-templates select="ReturnType/ScalarFunctionReturnType/DataType"/>
       </xsl:when>
       <xsl:when test="ReturnType/DeclareTableVariableBody">
         <xsl:text>SETOF out_result_table</xsl:text>
         <xsl:apply-templates select="DeclareTableVariableBody" />
       </xsl:when>
+      <xsl:otherwise>
+        <xsl:text>!UNKNOWN FUNCTION RETURN TYPE!</xsl:text>
+      </xsl:otherwise>
     </xsl:choose>      
     <xsl:call-template name="_LineBreak"></xsl:call-template>
     <xsl:text>LANGUAGE PLpgSQL</xsl:text>

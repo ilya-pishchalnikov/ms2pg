@@ -144,7 +144,6 @@
   <xsl:template match="TryCatchStatement">
     <xsl:text>BEGIN -- try</xsl:text>
     <xsl:call-template name="_IndentInc" />
-    <xsl:call-template name="_LineBreak" />
     <xsl:apply-templates select="TryStatements/Statements" />
     <xsl:call-template name="_IndentDec" />
     <xsl:call-template name="_LineBreak" />
@@ -216,7 +215,6 @@
 
   
   <xsl:template match="BeginEndBlockStatement">
-    <xsl:call-template name="_LineBreak" />
     <xsl:call-template name="_IndentInc" />
     <xsl:text>BEGIN</xsl:text>
     <xsl:call-template name="_LineBreak" />
@@ -225,6 +223,10 @@
     <xsl:call-template name="_LineBreak" />  
     <xsl:text>END</xsl:text>      
     <xsl:call-template name="_LineBreak" />
+  </xsl:template>
+
+  <xsl:template match="StatementList">
+    <xsl:apply-templates select="Statements"/>
   </xsl:template>
 
   <xsl:template match="DeclareVariableStatement">
@@ -241,17 +243,17 @@
     <xsl:text> := </xsl:text>
     <xsl:apply-templates select="Expression"/>
   </xsl:template>
-  <!--xsl:template match="IfStatement">
+  <xsl:template match="IfStatement">
     <xsl:text>IF </xsl:text>
-    <xsl:apply-templates select="Predicate"/>
+    <xsl:apply-templates select="Predicate"/>    
     <xsl:call-template name="_LineBreak" />
-    <xsl:text>THEN</xsl:text>
-    <xsl:call-template name="_IndentInc" />
-    <xsl:call-template name="_LineBreak" />    
+    <xsl:text> THEN </xsl:text>
+    <xsl:call-template name="_IndentInc" /> 
+    <xsl:call-template name="_LineBreak" />
     <xsl:apply-templates select="ThenStatement"/>
     <xsl:call-template name="_IndentDec" />
-    <xsl:call-template name="_LineBreak" />  
     <xsl:if test="ElseStatement">
+      <xsl:call-template name="_LineBreak" />
       <xsl:text>ELSE</xsl:text>
       <xsl:call-template name="_IndentInc" />
       <xsl:call-template name="_LineBreak" /> 
@@ -261,8 +263,15 @@
     </xsl:if>
     <xsl:text>END IF</xsl:text>
     <xsl:call-template name="_LineBreak" /> 
-  </xsl:template-->
+  </xsl:template>
 
-
+  <xsl:template match="ThenStatement">
+    <xsl:apply-templates select="*"/>
+    <xsl:call-template name="_EndOfStatement" />
+  </xsl:template>
+  <xsl:template match="ElseStatement">
+    <xsl:apply-templates select="*"/>
+    <xsl:call-template name="_EndOfStatement" />
+  </xsl:template>
 
 </xsl:stylesheet>

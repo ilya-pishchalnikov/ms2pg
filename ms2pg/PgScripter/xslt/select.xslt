@@ -72,6 +72,10 @@
       <xsl:call-template name="_IndentInc" />
       <xsl:call-template name="_LineBreak" /> 
       <xsl:for-each select="SelectSetVariable">
+        <xsl:if test="position() > 1">
+          <xsl:text>,</xsl:text>
+          <xsl:call-template name="_LineBreak" />
+        </xsl:if>
         <xsl:apply-templates select="Variable" />
       </xsl:for-each>
     </xsl:if>
