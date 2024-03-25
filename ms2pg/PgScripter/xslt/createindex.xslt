@@ -7,12 +7,11 @@
       <xsl:text>UNIQUE </xsl:text>
     </xsl:if>
     <xsl:text>INDEX IF NOT EXISTS </xsl:text>
-    <xsl:value-of select="Name/@Value" />
+    <xsl:apply-templates select="Name/Identifier" />
     <xsl:call-template name="_IndentInc" />
     <xsl:call-template name="_LineBreak" />
     <xsl:text>ON </xsl:text>
-    <xsl:apply-templates
-      select="OnName/Identifiers" />
+    <xsl:apply-templates select="OnName/SchemaObjectName/Identifiers" />
     <xsl:text> (</xsl:text>
     <xsl:call-template name="_IndentInc" />
     <xsl:call-template name="_IndentInc" />
@@ -22,7 +21,7 @@
         <xsl:text>, </xsl:text>
       <xsl:call-template name="_LineBreak" />
       </xsl:if>
-    <xsl:apply-templates select="Column/MultiPartIdentifier" />        
+    <xsl:apply-templates select="Column/ColumnReferenceExpression/MultiPartIdentifier" />        
     <xsl:if test="@SortOrder='Ascending'">
         <xsl:text> ASC</xsl:text>
       </xsl:if>

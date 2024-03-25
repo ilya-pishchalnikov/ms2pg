@@ -10,7 +10,7 @@ namespace ms2pg
         {
             var config = new Config.Config();
             //ObjectsScripter.ScriptAllObjects(config);
-            ObjectsParser.ParseFiles(config);
+            //ObjectsParser.ParseFiles(config);
             PgScripter.PgScripter.pgScript(config);
             PgDeploy.PgDeploy.Deploy(config);
         }

@@ -109,7 +109,10 @@
     <xsl:text>FOREIGN KEY (</xsl:text>
     <xsl:apply-templates select="./Columns/Identifier" />   
     <xsl:text>) REFERENCES </xsl:text>
-    <xsl:apply-templates select="ReferenceTableName/Identifiers" />
+    <xsl:apply-templates select="ReferenceTableName/SchemaObjectName/Identifiers" />
+    <xsl:text> (</xsl:text>
+    <xsl:apply-templates select="ReferencedTableColumns/Identifier"/>
+    <xsl:text>)</xsl:text>
   </xsl:template>
 
     <!-- Constraint explicitly name -->

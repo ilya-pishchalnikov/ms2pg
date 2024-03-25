@@ -23,6 +23,10 @@
           <xsl:apply-templates select = "." />
           <xsl:call-template name="_EndOfStatement" />
         </xsl:when>
+        <xsl:when test="local-name() = 'AlterTableConstraintModificationStatement'">
+          <xsl:text>/*AlterTableConstraintModificationStatement skiped*/</xsl:text>
+          <xsl:call-template name="_EndOfStatement" />
+        </xsl:when>
         <xsl:when test="local-name() = 'CreateIndexStatement'">
           <xsl:apply-templates select = "." />
           <xsl:call-template name="_EndOfStatement" />

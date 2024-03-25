@@ -7,41 +7,35 @@
     <xsl:apply-templates select="QueryExpression" />
   </xsl:template>  
 
-  <!-- Query -->
   <xsl:template match="QueryExpression|FirstQueryExpression|SecondQueryExpression">
+    <xsl:apply-templates select="*"/>    
+  </xsl:template>
+
+  <xsl:template match="BinaryQueryExpression">
+    <xsl:apply-templates select="FirstQueryExpression"/>
     <xsl:choose>
-      <xsl:when test="@BinaryQueryExpressionType">
-        <xsl:apply-templates select="FirstQueryExpression"/>
-        <xsl:call-template name="_LineBreak" />
-        <xsl:choose>
-          <xsl:when test="@BinaryQueryExpressionType='Union'">
-            <xsl:text>UNION</xsl:text>    
-            <xsl:if test="@All = 'True'">
-              <xsl:text> ALL</xsl:text>
-            </xsl:if>
-          </xsl:when>
-          <xsl:when test="@BinaryQueryExpressionType='Except'">
-            <xsl:text> EXCEPT </xsl:text>            
-          </xsl:when>
-          <xsl:when test="@BinaryQueryExpressionType='Intersect'">
-            <xsl:text> INTERSECT </xsl:text>            
-          </xsl:when>
-          <xsl:otherwise>
-            <xsl:value-of select="@BinaryQueryExpressionType"/>
-          </xsl:otherwise>
-        </xsl:choose>
-        <xsl:call-template name="_LineBreak" />        
-        <xsl:apply-templates select="SecondQueryExpression"/>
+      <xsl:when test="@BinaryQueryExpressionType='Union'">
+        <xsl:text>UNION</xsl:text>
       </xsl:when>
-      <xsl:otherwise>        
-        <xsl:apply-templates select="SelectElements" />
-        <xsl:apply-templates select="FromClause" />
-        <xsl:apply-templates select="WhereClause" />
-        <xsl:apply-templates select="GroupByClause" />
-        <xsl:apply-templates select="HavingClause" />
-        <xsl:apply-templates select="OrderByClause" />
-      </xsl:otherwise>
+      <xsl:when test="@BinaryQueryExpressionType='Except'">
+        <xsl:text>EXCEPT</xsl:text>
+      </xsl:when>
+      <xsl:when test="@BinaryQueryExpressionType='Intersect'">
+        <xsl:text>INTERSECT</xsl:text>
+      </xsl:when>
     </xsl:choose>
+    <xsl:call-template name="_LineBreak" />
+    <xsl:apply-templates select="SecondQueryExpression"/>
+  </xsl:template>
+
+  <!-- Query -->
+  <xsl:template match="QuerySpecification">   
+    <xsl:apply-templates select="SelectElements" />
+    <xsl:apply-templates select="FromClause" />
+    <xsl:apply-templates select="WhereClause" />
+    <xsl:apply-templates select="GroupByClause" />
+    <xsl:apply-templates select="HavingClause" />
+    <xsl:apply-templates select="OrderByClause" />
   </xsl:template>  
 
   <!-- Select clause -->
@@ -68,7 +62,7 @@
       </xsl:choose>
       <xsl:if test="ColumnName/node()">
         <xsl:text> AS </xsl:text>
-        <xsl:apply-templates select="ColumnName/Identifier" />
+        <xsl:apply-templates select="ColumnName/IdentifierOrValueExpression/Identifier" />
       </xsl:if>
     </xsl:for-each>
     <xsl:if test="SelectSetVariable">
@@ -146,44 +140,36 @@
 
 
     <xsl:template match="TableReferences">
-      <xsl:for-each select=".">
-          <xsl:choose>
-            <xsl:when test="QualifiedJoin">
-              <xsl:apply-templates select="QualifiedJoin" />
-            </xsl:when>
-            <xsl:when test="UnqualifiedJoin">
-              <xsl:apply-templates select="UnqualifiedJoin" />
-            </xsl:when>
-            <xsl:when test="NamedTableReference">
-              <xsl:for-each select="NamedTableReference">
-                <xsl:if test="position() > 1">
-                  <xsl:text>, </xsl:text>
-                </xsl:if>
-                <xsl:apply-templates select="SchemaObject" />
-                <xsl:if test="Alias">
-                  <xsl:text> AS </xsl:text>
-                  <xsl:value-of select="Alias/@Value"></xsl:value-of>
-                </xsl:if>
-              </xsl:for-each>
-            </xsl:when>
-            <xsl:when test="QueryDerivedTable">
-              <xsl:text>(</xsl:text>
-              <xsl:apply-templates select="QueryDerivedTable/QueryExpression" />
-              <xsl:text>)</xsl:text>
-              <xsl:if test="QueryDerivedTable/Alias/@Value != ''">
-                <xsl:text> AS </xsl:text>  
-                <xsl:value-of select="QueryDerivedTable/Alias/@Value"/>
-                <xsl:text> </xsl:text>
-              </xsl:if>
-            </xsl:when>
-            <xsl:otherwise>
-              <xsl:text>/*UNKNOWN TABLE REFERENCE*/</xsl:text>
-            </xsl:otherwise>
-          </xsl:choose>
+      <xsl:for-each select="*">
+        <xsl:if test="position() > 1">
+          <xsl:text>,</xsl:text>
+          <xsl:call-template name="_LineBreak" />
+        </xsl:if>
+        <xsl:apply-templates select="."/>
       </xsl:for-each>
     </xsl:template>
 
-    <xsl:template match="NamedTableReference|FirstTableReference[not(@QualifiedJoinType)]|SecondTableReference[not(@QualifiedJoinType)]">
+    <xsl:template match="TableReference|FirstTableReference|SecondTableReference">
+      <xsl:apply-templates select="NamedTableReference|QualifiedJoin|UnqualifiedJoin|QueryDerivedTable"/>
+    </xsl:template>
+
+    <xsl:template match="QueryDerivedTable">
+      <xsl:text>(</xsl:text>
+      <xsl:call-template name="_IndentInc" />
+      <xsl:call-template name="_IndentInc" />
+      <xsl:call-template name="_LineBreak" />
+      <xsl:apply-templates select="QueryExpression"/>
+      <xsl:call-template name="_IndentDec" />
+      <xsl:call-template name="_LineBreak" />
+      <xsl:text>)</xsl:text>
+      <xsl:call-template name="_IndentDec" />
+      <xsl:if test="Alias/node()">
+        <xsl:text> AS </xsl:text>
+        <xsl:apply-templates select="Alias/Identifier"/>
+      </xsl:if>
+    </xsl:template>
+
+    <xsl:template match="NamedTableReference">
      <xsl:choose>
         <xsl:when test="SchemaObject">
           <xsl:apply-templates select="SchemaObject" />
@@ -205,14 +191,15 @@
         </xsl:otherwise>
       </xsl:choose>
       <xsl:apply-templates select="NamedTableReference/SchemaObject" />
-      <xsl:if test="Alias">
+      <xsl:if test="Alias/node()">
         <xsl:text> AS </xsl:text>
-        <xsl:value-of select="ms2pg:QuoteName(Alias/@Value)"></xsl:value-of>
+        <xsl:apply-templates select="Alias/Identifier" />
       </xsl:if>
+
     </xsl:template>
 
     <!-- Join clause -->
-    <xsl:template match="QualifiedJoin|UnqualifiedJoin|FirstTableReference[@QualifiedJoinType]|SecondTableReference[@QualifiedJoinType]">
+    <xsl:template match="QualifiedJoin|UnqualifiedJoin">
       <xsl:apply-templates select ="FirstTableReference" />
       <xsl:call-template name="_LineBreak" />
       <xsl:choose>
@@ -251,7 +238,7 @@
       <xsl:call-template name="_LineBreak" />
     </xsl:template>
 
-    <xsl:template match="Subquery|QueryDerivedTable">
+    <!-- <xsl:template match="Subquery">
       <xsl:text>(</xsl:text>
       <xsl:call-template name="_IndentInc" />
       <xsl:call-template name="_IndentInc" />
@@ -261,11 +248,11 @@
       <xsl:call-template name="_LineBreak" />
       <xsl:text>)</xsl:text>
       <xsl:call-template name="_IndentDec" />
-    </xsl:template>
+    </xsl:template> -->
 
     <!-- From clause -->
     <xsl:template match="SchemaObject">
-        <xsl:apply-templates select ="Identifiers" />
+        <xsl:apply-templates select ="SchemaObjectName/Identifiers" />
       </xsl:template>  
     
 </xsl:stylesheet>

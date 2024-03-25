@@ -20,7 +20,7 @@ namespace ms2pg.PgDeploy
                 case "42883": // Operator does not exist
                     var messageText = exception.Data["MessageText"] as string;
                     
-                    if (Regex.IsMatch(messageText!, @"(character varying|text) \+ (character varying|text)"))
+                    if (Regex.IsMatch(messageText!, @"(character varying|text|unknown|name) \+ (character varying|text|unknown|name)"))
                     {
 
                         position = (int) exception.Data["Position"]!;
@@ -134,9 +134,9 @@ namespace ms2pg.PgDeploy
                     position = (int) exception.Data["Position"]!;
                 }
                 beforeErrorBatchPart = batch.Substring(0, position > 0 ? position-1 : 0);
-                fixedBatch = $"/*!ERROR IN BATCH!: '{exception.Data["SqlState"] as string}:{exception.Data["MessageText"] as string}'*/\n"
+                fixedBatch = $"/*!ERROR IN BATCH!: file: '({fileName})' Message:'{exception.Data["SqlState"] as string}:{exception.Data["MessageText"] as string}'*/\n"
                         + beforeErrorBatchPart 
-                        + $"/*!ERROR HERE!: '{exception.Data["SqlState"] as string}:{exception.Data["MessageText"] as string}'*/"
+                        + $"/*!ERROR HERE!: file: '({fileName})' Message:'{exception.Data["SqlState"] as string}:{exception.Data["MessageText"] as string}'*/"
                         + batch.Substring(position-1);
                 batches[batchIndex] = fixedBatch;
                 File.WriteAllText(fileName, batches.Aggregate((x,y) => x + "\n{{GO}}\n" + y));

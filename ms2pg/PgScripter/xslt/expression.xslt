@@ -8,23 +8,235 @@
     <xsl:apply-templates select="Identifiers"/>
   </xsl:template>  
   
-  <xsl:template match="Expression">
+  <xsl:template match="Expression|FirstExpression|SecondExpression|ThirdExpression|InputExpression|WhenExpression|ThenExpression|ElseExpression">
     <xsl:apply-templates select="*"/>    
   </xsl:template>
 
+  <xsl:template match="SearchCondition">
+    <xsl:apply-templates select="*"/>
+  </xsl:template>
+
+  <xsl:template match="BooleanParenthesisExpression">
+    <xsl:text>(</xsl:text>
+    <xsl:apply-templates select="Expression"/>
+    <xsl:text>)</xsl:text>    
+  </xsl:template>
+
+  <xsl:template match="BooleanIsNullExpression">
+    <xsl:apply-templates select="Expression"/>
+    <xsl:text> IS </xsl:text>
+    <xsl:if test="@IsNot='True'">
+      <xsl:text>NOT </xsl:text>
+    </xsl:if>
+    <xsl:text>NULL</xsl:text>
+  </xsl:template>
+
+  <xsl:template match="BooleanComparisonExpression">
+    <xsl:apply-templates select="FirstExpression"/>
+    <xsl:choose>
+      <xsl:when test="@ComparisonType='GreaterThan'">
+        <xsl:text> &gt; </xsl:text>
+      </xsl:when>
+      <xsl:when test="@ComparisonType='LessThan'">
+        <xsl:text> &lt; </xsl:text>
+      </xsl:when>
+      <xsl:when test="@ComparisonType='GreaterThanOrEqualTo'">
+        <xsl:text> &gt;= </xsl:text>
+      </xsl:when>
+      <xsl:when test="@ComparisonType='LessThanOrEqualTo'">
+        <xsl:text> &lt;= </xsl:text>
+      </xsl:when>
+      <xsl:when test="@ComparisonType='Equals'">
+        <xsl:text> = </xsl:text>
+      </xsl:when>
+      <xsl:when test="@ComparisonType='NotEqualToExclamation' or @ComparisonType='NotEqualToBrackets'">
+        <xsl:text> &lt;&gt; </xsl:text>
+      </xsl:when>
+    </xsl:choose>
+    <xsl:apply-templates select="SecondExpression"/>
+  </xsl:template>
+
+  <xsl:template match="BooleanBinaryExpression">
+    <xsl:apply-templates select="FirstExpression"/>
+    <xsl:call-template name="_IndentInc" />
+    <xsl:call-template name="_LineBreak" />
+    <xsl:call-template name="_IndentDec" />
+    <xsl:choose>
+      <xsl:when test="@BinaryExpressionType='And'">
+        <xsl:text> AND </xsl:text>
+      </xsl:when>
+      <xsl:when test="@BinaryExpressionType='Or'">
+        <xsl:text> OR </xsl:text>
+      </xsl:when>
+    </xsl:choose>
+    <xsl:apply-templates select="SecondExpression"/>
+  </xsl:template>
+
+
+  <xsl:template match="BinaryExpression">
+    <xsl:apply-templates select="FirstExpression"/>
+    <xsl:call-template name="_IndentInc" />
+    <xsl:call-template name="_LineBreak" />
+    <xsl:call-template name="_IndentDec" />
+    <xsl:choose>
+      <xsl:when test="@BinaryExpressionType='Add'">
+        <xsl:text> + </xsl:text>
+      </xsl:when>
+      <xsl:when test="@BinaryExpressionType='Multiply'">
+        <xsl:text> * </xsl:text>
+      </xsl:when>
+      <xsl:when test="@BinaryExpressionType='Subtract'">
+        <xsl:text> - </xsl:text>
+      </xsl:when>
+      <xsl:when test="@BinaryExpressionType='Divide'">
+        <xsl:text> / </xsl:text>
+      </xsl:when>
+      <xsl:when test="@BinaryExpressionType='Modulo'">
+        <xsl:text> % </xsl:text>
+      </xsl:when>
+    </xsl:choose>
+    <xsl:apply-templates select="SecondExpression"/>
+  </xsl:template>
+
+
   <xsl:template match="ParenthesisExpression">
-        <xsl:text>(</xsl:text>
-        <xsl:apply-templates select="Expression"/>
-        <xsl:text>)</xsl:text>    
+    <xsl:text>(</xsl:text>
+    <xsl:apply-templates select="Expression"/>
+    <xsl:text>)</xsl:text>    
   </xsl:template>
 
-    <xsl:template match="IntegerLiteral">
-        <xsl:apply-templates select="@value"/>
+  <xsl:template match="IntegerLiteral">
+    <xsl:value-of select="@Value"/>
   </xsl:template>
-
   
+  <xsl:template match="StringLiteral">
+    <xsl:text>'</xsl:text>
+    <xsl:value-of select="@Value"/>
+    <xsl:text>'</xsl:text>
+  </xsl:template>
+
+  <xsl:template match="ColumnReferenceExpression">
+    <xsl:apply-templates select="MultiPartIdentifier"/>
+  </xsl:template>
+
+  <xsl:template match="FunctionCall">
+    <xsl:variable name="function_name" select="ms2pg:ToLower(FunctionName/Identifier/@Value)"/>
+    <xsl:choose>
+      <xsl:when test="$function_name='day' or $function_name='year' or $function_name = 'month'">
+        <xsl:text>EXTRACT (</xsl:text>
+        <xsl:value-of select="$function_name"/>
+        <xsl:text> FROM </xsl:text>
+        <xsl:apply-templates select="Parameters"/>
+        <xsl:text>)</xsl:text>
+      </xsl:when>
+    <xsl:otherwise>      
+      <xsl:choose>
+        <xsl:when test="$function_name = 'getdate'">
+          <xsl:text>now</xsl:text>
+        </xsl:when>
+        <xsl:when test="$function_name = 'isnull'">
+          <xsl:text>coalesce</xsl:text>
+        </xsl:when>
+        <xsl:when test="$function_name = 'newid'">
+          <xsl:text>uuid_generate_v4</xsl:text>
+        </xsl:when>
+        <xsl:when test="$function_name = 'db_name'">
+          <xsl:text>current_database</xsl:text>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:value-of select="$function_name"/>
+        </xsl:otherwise>
+      </xsl:choose>
+      <xsl:text>(</xsl:text>
+      <xsl:apply-templates select="Parameters"/>
+      <xsl:text>)</xsl:text>
+    </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+  <xsl:template match="ConvertCall">
+    <xsl:text>CAST(</xsl:text>
+    <xsl:apply-templates select="Parameter"/>
+    <xsl:text> AS </xsl:text>
+    <xsl:apply-templates select="DataType"/>
+    <xsl:text>)</xsl:text>
+  </xsl:template>
+
+  <xsl:template match="BooleanTernaryExpression[@TernaryExpressionType='Between']">
+    <xsl:apply-templates select="FirstExpression"/>
+    <xsl:text> BETWEEN </xsl:text>
+    <xsl:apply-templates select="SecondExpression"/>
+    <xsl:text> AND </xsl:text>
+    <xsl:apply-templates select="ThirdExpression"/>
+  </xsl:template>
+  
+  <xsl:template match="NullLiteral">
+    <xsl:text> NULL </xsl:text>
+  </xsl:template>
+  
+  <xsl:template match="NumericLiteral">
+    <xsl:value-of select="@Value"/>
+  </xsl:template>
+  
+  <xsl:template match="SimpleCaseExpression|SearchedCaseExpression">
+    <xsl:text>CASE </xsl:text>
+    <xsl:apply-templates select="InputExpression"/>
+    <xsl:call-template name="_IndentInc" />
+    <xsl:for-each select="WhenClauses/SearchedWhenClause|WhenClauses/SimpleWhenClause">
+      <xsl:call-template name="_LineBreak" />
+      <xsl:text>WHEN </xsl:text>
+      <xsl:apply-templates select="WhenExpression"/> 
+      <xsl:call-template name="_LineBreak" />  
+      <xsl:text>THEN </xsl:text>
+      <xsl:apply-templates select="ThenExpression"/>
+    </xsl:for-each>
+    <xsl:if test="ElseExpression">
+      <xsl:call-template name="_LineBreak" />
+      <xsl:text>ELSE </xsl:text>
+      <xsl:apply-templates select="ElseExpression"/>
+    </xsl:if>
+    <xsl:call-template name="_IndentDec" />
+    <xsl:call-template name="_LineBreak" />
+    <xsl:text>END</xsl:text>
+  </xsl:template>
+
+  <xsl:template match="ScalarSubquery">
+    <xsl:call-template name="_IndentInc" />
+    <xsl:call-template name="_LineBreak" />
+    <xsl:text>(</xsl:text>
+    <xsl:call-template name="_IndentInc" />
+    <xsl:call-template name="_LineBreak" />
+    <xsl:apply-templates select="QueryExpression"/>
+    <xsl:text>)</xsl:text>
+  </xsl:template>
+
+  <xsl:template match="LikePredicate">
+    <xsl:apply-templates select="FirstExpression"/>
+    <xsl:text> LIKE </xsl:text>
+    <xsl:apply-templates select="SecondExpression"/>
+  </xsl:template>
+  
+  <xsl:template match="InPredicate">
+    <xsl:apply-templates select="Expression"/>
+    <xsl:if test="@NotDefined='True'">
+      <xsl:text> NOT</xsl:text>
+    </xsl:if>
+    <xsl:text> IN </xsl:text>
+    <xsl:if test="Values/node()">
+      <xsl:for-each select="Values">      
+        <xsl:if test="position()>1">
+          <xsl:text>, </xsl:text>
+        </xsl:if>
+        <xsl:apply-templates select="."/>
+      </xsl:for-each>
+    </xsl:if>
+    <xsl:if test="Subquery/node()">
+      <xsl:apply-templates select="Subquery/ScalarSubquery"/>
+    </xsl:if>    
+  </xsl:template>
+
   <!-- Expression -->
-  <xsl:template match="FirstExpression|SecondExpression|SearchCondition|ColumnReferenceExpression|BinaryExpression|StringLiteral|IntegerLiteral|Value|NewValue|WhenExpression|ThenExpression|ElseExpression|Parameter|UnaryExpression|FunctionCall|NumericLiteral|ConvertCall|InputExpression|ThirdExpression|CastCall|VariableReference|Predicate">
+  <!--xsl:template match="FirstExpression|SecondExpression|SearchCondition|ColumnReferenceExpression|BinaryExpression|StringLiteral|IntegerLiteral|Value|NewValue|WhenExpression|ThenExpression|ElseExpression|Parameter|UnaryExpression|FunctionCall|NumericLiteral|ConvertCall|InputExpression|ThirdExpression|CastCall|VariableReference|Predicate">
     <xsl:if test="@FirstTokenType='Not' and *[1]/@FirstTokenType!='Not'">
       <xsl:text> NOT </xsl:text>
     </xsl:if>  
@@ -305,7 +517,7 @@
         <xsl:value-of select="@Value" />
       </xsl:otherwise>
     </xsl:choose>
-  </xsl:template>
+  </xsl:template -->
   
   <!-- MultiPartIdentifier -->  
   <xsl:template match="MultiPartIdentifier">
@@ -354,14 +566,16 @@
   </xsl:template>
   
   <xsl:template match="Parameters">
-    <xsl:text>(</xsl:text>    
     <xsl:for-each select="*">
       <xsl:if test="position()>1">
         <xsl:text>, </xsl:text>
       </xsl:if>
       <xsl:apply-templates select="." />
-    </xsl:for-each>
-    <xsl:text>)</xsl:text>    
+    </xsl:for-each>  
+  </xsl:template>
+
+  <xsl:template match="Parameter">
+    <xsl:apply-templates select="*"/>
   </xsl:template>
   
 </xsl:stylesheet>

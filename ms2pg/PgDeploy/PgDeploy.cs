@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
 using Microsoft.Data.SqlClient;
 using Microsoft.SqlServer.Management.Common;
@@ -96,13 +97,19 @@ namespace ms2pg.PgDeploy
                             {
                                 if (ErrorsSolver.Solve(ex, fileBatches, i, file))
                                 {
+                                    Console.WriteLine ("Error fixed");
                                     i--;
                                 }
-                                ErrorCount--;
+                                else 
+                                {
+                                    ErrorCount--;
+                                }
                                 batches.Enqueue(fileBatches[i]);
                                 Console.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}\terror while deploying file \t{file}: {ex.Message}");
                                 if (ErrorCount <= 0)
                                 {
+                                    File.WriteAllText("errors.sql", batches.Where(x => x.Contains("!ERROR IN BATCH!")).Aggregate( (x, y) => x + "\n\n/*GO*/\n\n" + y));
+                                    throw new ApplicationException($"Error count exceeds limit. Undeployed batches ({batches.Count}) saved to errors.sql");
                                     throw new ApplicationException("Error count exceeds limit");
                                 }
                             }
@@ -127,7 +134,7 @@ namespace ms2pg.PgDeploy
                         if (ErrorCount <= 0)
                         {
                             File.WriteAllText("errors.sql", batches.Aggregate( (x, y) => x + "\n\n/*GO*/\n\n" + y));
-                            throw new ApplicationException($"Error count exceeds limit. Undeployed batches ({batches.Count}) saved to errors.sql");
+                             throw new ApplicationException($"Error count exceeds limit. Undeployed batches ({batches.Count}) saved to errors.sql");
                         }
                         if (ErrorCount > batches.Count + 1){
                             ErrorCount = batches.Count + 1;
