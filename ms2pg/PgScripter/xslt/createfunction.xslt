@@ -33,9 +33,9 @@
       <xsl:when test="ReturnType/ScalarFunctionReturnType/DataType">
         <xsl:apply-templates select="ReturnType/ScalarFunctionReturnType/DataType"/>
       </xsl:when>
-      <xsl:when test="ReturnType/DeclareTableVariableBody">
-        <xsl:text>SETOF out_result_table</xsl:text>
-        <xsl:apply-templates select="DeclareTableVariableBody" />
+      <xsl:when test="ReturnType/TableValuedFunctionReturnType">
+        <xsl:text>TABLE </xsl:text>
+        <xsl:apply-templates select="ReturnType/TableValuedFunctionReturnType/DeclareTableVariableBody/Definition/TableDefinition" />
       </xsl:when>
       <xsl:otherwise>
         <xsl:text>!UNKNOWN FUNCTION RETURN TYPE!</xsl:text>
@@ -68,21 +68,14 @@
       <xsl:call-template name="_IndentDec" />
       <xsl:call-template name="_LineBreak" />
     </xsl:if>
-    <xsl:choose>
-      <xsl:when test="ReturnType/DeclareTableVariableBody and StatementList/Statements/BeginEndBlockStatement">
-        <xsl:text>BEGIN</xsl:text>
-          <xsl:call-template name="_IndentInc"></xsl:call-template>
-          <xsl:call-template name="_LineBreak"></xsl:call-template> 
-      </xsl:when>
-      <xsl:otherwise>
-          <xsl:apply-templates select="StatementList" /> 
-      </xsl:otherwise>
-    </xsl:choose>
+
+    <xsl:apply-templates select="StatementList" /> 
     <xsl:call-template name="_IndentDec"></xsl:call-template>
     <xsl:call-template name="_LineBreak"></xsl:call-template>
     <xsl:call-template name="_LineBreak"></xsl:call-template>
     <xsl:text>$$</xsl:text>
   </xsl:template>
+
 
 
 

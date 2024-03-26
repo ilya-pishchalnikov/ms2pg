@@ -170,6 +170,9 @@
         <xsl:when test="$function_name = 'db_name'">
           <xsl:text>current_database</xsl:text>
         </xsl:when>
+        <xsl:when test="$function_name = 'char'">
+          <xsl:text>chr</xsl:text>
+        </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="$function_name"/>
         </xsl:otherwise>
@@ -248,6 +251,9 @@
     <xsl:apply-templates select="QueryExpression"/>
     <xsl:text>)</xsl:text>
   </xsl:template>
+  <xsl:template match="Predicate">
+    <xsl:apply-templates select="*"/>
+  </xsl:template>
 
   <xsl:template match="LikePredicate">
     <xsl:apply-templates select="FirstExpression"/>
@@ -255,9 +261,6 @@
     <xsl:apply-templates select="SecondExpression"/>
   </xsl:template>
   
-  <xsl:template match="Predicate">
-    <xsl:apply-templates select="*"/>
-  </xsl:template>
   
   <xsl:template match="InPredicate">
     <xsl:apply-templates select="Expression"/>
@@ -276,6 +279,20 @@
     <xsl:if test="Subquery/node()">
       <xsl:apply-templates select="Subquery/ScalarSubquery"/>
     </xsl:if>    
+  </xsl:template>
+
+  <xsl:template match="ExistsPredicate">
+    <xsl:text>EXISTS (</xsl:text>    
+    <xsl:call-template name="_IndentInc" />
+    <xsl:call-template name="_IndentInc" />
+    <xsl:call-template name="_LineBreak" />
+    <xsl:apply-templates select="Subquery/ScalarSubquery/QueryExpression"/>
+    
+    <xsl:call-template name="_IndentDec" />
+    <xsl:call-template name="_LineBreak" />
+    <xsl:text>)</xsl:text>
+    <xsl:call-template name="_IndentDec" />
+    <xsl:call-template name="_LineBreak" />
   </xsl:template>
 
   <!-- Expression -->
@@ -631,6 +648,14 @@
     <xsl:text>, </xsl:text>
     <xsl:apply-templates select="SecondExpression"/>
     <xsl:text>)</xsl:text>
+  </xsl:template>
+  
+  <xsl:template match="VariableTableReference">
+    <xsl:apply-templates select="Variable"/>
+    <xsl:if test="not (@Alias='')">
+      <xsl:text> AS </xsl:text>
+      <xsl:value-of select="ms2pg:QuoteName(@Alias)"/>
+    </xsl:if>
   </xsl:template>
   
 </xsl:stylesheet>

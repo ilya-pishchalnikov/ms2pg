@@ -63,10 +63,6 @@
           <xsl:apply-templates select = "." />
           <xsl:call-template name="_EndOfStatement" />
         </xsl:when>
-        <xsl:when test="local-name() = 'InsertStatement'">
-          <xsl:apply-templates select = "." />
-          <xsl:call-template name="_LineBreak" />
-        </xsl:when>
         <xsl:when test="local-name() = 'RaiseErrorStatement'">
           <xsl:apply-templates select = "." />
           <xsl:call-template name="_EndOfStatement" />
@@ -92,6 +88,10 @@
           <xsl:call-template name="_EndOfStatement" />
         </xsl:when>
         <xsl:when test="local-name() = 'IfStatement'">
+          <xsl:apply-templates select = "." />
+          <xsl:call-template name="_EndOfStatement" />
+        </xsl:when>
+        <xsl:when test="local-name() = 'InsertStatement'">
           <xsl:apply-templates select = "." />
           <xsl:call-template name="_EndOfStatement" />
         </xsl:when>
@@ -185,18 +185,6 @@
 
 
 
-    <!-- Insert statement -->
-  <xsl:template match="InsertStatement">
-    <xsl:choose>
-      <xsl:when test="InsertSpecification/InsertSource/Execute">
-        <xsl:text>/********************** INSERT-EXEC NOT SUPPORTED **********************/</xsl:text>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:call-template name="_UnknownToken" />
-      </xsl:otherwise>
-    </xsl:choose>
-  </xsl:template>
-
   <!-- Raiserror statement -->
   <xsl:template match="RaiseErrorStatement">
     <xsl:text>RAISE </xsl:text>
@@ -218,6 +206,10 @@
     <xsl:call-template name="_IndentInc" />
     <xsl:text>BEGIN</xsl:text>
     <xsl:call-template name="_LineBreak" />
+    <xsl:if test="ancestor::CreateFunctionStatement/ReturnType/TableValuedFunctionReturnType and not(ancestor::BeginEndBlockStatement)">
+      <xsl:apply-templates select="ancestor::CreateFunctionStatement/ReturnType/TableValuedFunctionReturnType/DeclareTableVariableBody"/>
+      <xsl:call-template name="_EndOfStatement" />
+    </xsl:if>
     <xsl:apply-templates select="StatementList"/>
     <xsl:call-template name="_IndentDec" />
     <xsl:call-template name="_LineBreak" />  
@@ -235,7 +227,25 @@
   
   <xsl:template match="ReturnStatement">
     <xsl:text>RETURN </xsl:text>
-    <xsl:apply-templates select="Expression"/>
+    <xsl:choose>
+      <xsl:when test="ancestor::CreateFunctionStatement/ReturnType/TableValuedFunctionReturnType">
+        <xsl:text>QUERY </xsl:text>   
+        <xsl:call-template name="_LineBreak" />
+        <xsl:text>SELECT * </xsl:text>
+        <xsl:call-template name="_LineBreak" />
+        <xsl:text>FROM tmp_</xsl:text>
+        <xsl:apply-templates select="Variable"/>
+        <xsl:value-of select="CreateFunctionStatement/ReturnType/TableValuedFunctionReturnType/DeclareTableVariableBody"/>
+        <xsl:apply-templates select="ancestor::CreateFunctionStatement/ReturnType/TableValuedFunctionReturnType/DeclareTableVariableBody/VariableName"/>        
+      </xsl:when>
+      <xsl:when test="Expression">
+        <xsl:apply-templates select="Expression"/>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:text>!UNKNOWN RETURN TYPE!</xsl:text>
+      </xsl:otherwise>
+    </xsl:choose>
+    
   </xsl:template>
   
   <xsl:template match="SetVariableStatement">
@@ -272,6 +282,61 @@
   <xsl:template match="ElseStatement">
     <xsl:apply-templates select="*"/>
     <xsl:call-template name="_EndOfStatement" />
+  </xsl:template>
+
+  <xsl:template match="DeclareTableVariableBody">
+    <xsl:text>CREATE TABLE IF NOT EXISTS tmp_</xsl:text>
+    <xsl:apply-templates select="VariableName"/>
+    <xsl:apply-templates select="Definition/TableDefinition"/>
+  </xsl:template>
+
+  <xsl:template match="InsertStatement">
+    <xsl:text>INSERT INTO tmp_</xsl:text>
+    <xsl:if test="InsertSpecification/Target/VariableTableReference">
+      <xsl:text>tmp_</xsl:text>
+    </xsl:if>
+    <xsl:apply-templates select="InsertSpecification/Target/VariableTableReference"/>
+    <xsl:text>(</xsl:text>
+    <xsl:call-template name="_IndentInc" />
+    <xsl:call-template name="_IndentInc" />
+    <xsl:call-template name="_LineBreak" />
+    <xsl:for-each select="InsertSpecification/Columns/ColumnReferenceExpression">    
+      <xsl:if test="position()>1">
+        <xsl:text>, </xsl:text>
+        <xsl:call-template name="_LineBreak" />
+      </xsl:if>
+      <xsl:apply-templates select="MultiPartIdentifier"/>
+    </xsl:for-each>
+    <xsl:call-template name="_IndentDec" />
+    <xsl:call-template name="_LineBreak" />
+    <xsl:text>)</xsl:text>
+    <xsl:call-template name="_IndentDec" />
+    <xsl:call-template name="_LineBreak" />
+    <xsl:choose>
+      <xsl:when test="InsertSpecification/InsertSource/SelectInsertSource/Select/QuerySpecification">
+        <xsl:apply-templates select="InsertSpecification/InsertSource/SelectInsertSource/Select/QuerySpecification"/>
+      </xsl:when>
+      <xsl:when test="InsertSpecification/InsertSource/ValuesInsertSource">
+        <xsl:text>VALUES (</xsl:text>
+        <xsl:call-template name="_IndentInc" />
+        <xsl:call-template name="_IndentInc" />
+        <xsl:call-template name="_LineBreak" />
+        <xsl:for-each select="InsertSpecification/InsertSource/ValuesInsertSource/RowValues/RowValue/ColumnValues/*">
+          <xsl:if test="position() > 1">
+            <xsl:text>, </xsl:text>
+            <xsl:call-template name="_LineBreak" />
+          </xsl:if>
+          <xsl:apply-templates select="."/>
+        </xsl:for-each>
+        <xsl:call-template name="_IndentDec" />
+        <xsl:call-template name="_LineBreak" />
+        <xsl:text>)</xsl:text>
+        <xsl:call-template name="_IndentDec" />
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:text>!UNKNOWN!</xsl:text>
+      </xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
 
 </xsl:stylesheet>
