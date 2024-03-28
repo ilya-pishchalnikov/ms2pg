@@ -122,22 +122,7 @@
       <xsl:text>ORDER BY </xsl:text>
       <xsl:call-template name="_IndentInc" />
       <xsl:call-template name="_LineBreak" /> 
-      <xsl:for-each select="OrderByElements/ExpressionWithSortOrder">
-        <xsl:if test="position() > 1">
-          <xsl:call-template name="_LineBreak" />
-          <xsl:text>,</xsl:text>
-        </xsl:if>
-        <xsl:apply-templates select="Expression" />
-        <xsl:choose>
-          <xsl:when test="@SortOrder='Ascending'">
-            <xsl:text> ASC </xsl:text>
-          </xsl:when>
-          <xsl:when test="@SortOrder='Descending'">
-            <xsl:text> DESC </xsl:text>
-          </xsl:when>
-          <xsl:otherwise></xsl:otherwise>
-        </xsl:choose>
-      </xsl:for-each>
+      <xsl:apply-templates select="OrderByElements"/>
       <xsl:call-template name="_IndentDec" />
       <xsl:call-template name="_LineBreak" />
     </xsl:template>

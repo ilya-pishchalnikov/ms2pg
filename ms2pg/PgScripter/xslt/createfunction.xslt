@@ -46,16 +46,12 @@
     <xsl:call-template name="_LineBreak"></xsl:call-template>
     <xsl:text>AS $$</xsl:text>
     <xsl:call-template name="_LineBreak"></xsl:call-template>
-    <xsl:if test="//DeclareVariableElement">
+    <xsl:if test="//DeclareVariableElement|//DeclareCursorStatement">
       <xsl:call-template name="_LineBreak" />
-        <xsl:call-template name="_IndentInc" />
-        <xsl:text>DECLARE </xsl:text>
-        <xsl:call-template name="_LineBreak" />
-        <xsl:for-each select="//DeclareVariableElement">
-        <xsl:if test="position()>1">
-          <xsl:text>;</xsl:text>
-          <xsl:call-template name="_LineBreak" />
-        </xsl:if>
+      <xsl:call-template name="_IndentInc" />
+      <xsl:text>DECLARE </xsl:text>
+      <xsl:call-template name="_LineBreak" />
+      <xsl:for-each select="//DeclareVariableElement">
         <xsl:apply-templates select="VariableName"/>
         <xsl:text> </xsl:text>
         <xsl:apply-templates select="DataType"/>
@@ -63,8 +59,22 @@
           <xsl:text> := </xsl:text>
           <xsl:apply-templates select="Value"/>
         </xsl:if>
+        <xsl:text>;</xsl:text>
+        <xsl:call-template name="_LineBreak" />
       </xsl:for-each>
-      <xsl:text>;</xsl:text>
+      <xsl:for-each select="//DeclareCursorStatement">
+        <xsl:apply-templates select="Name/Identifier"/>
+        <xsl:text> CURSOR FOR (</xsl:text>
+        <xsl:call-template name="_IndentInc" />
+        <xsl:call-template name="_IndentInc" />
+        <xsl:call-template name="_LineBreak" />
+        <xsl:apply-templates select="CursorDefinition/Select/SelectStatement"/>
+        <xsl:call-template name="_IndentDec" />
+        <xsl:text>)</xsl:text>
+        <xsl:call-template name="_IndentDec" />
+        <xsl:text>;</xsl:text>
+          <xsl:call-template name="_LineBreak" />
+      </xsl:for-each>
       <xsl:call-template name="_IndentDec" />
       <xsl:call-template name="_LineBreak" />
     </xsl:if>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
  <!-- Statements choose -->
-  <xsl:template match="Statements">
+  <xsl:template match="Statements|Statement">
     <xsl:for-each select="*">
       <xsl:call-template name="_StatementBegin" />
       <xsl:choose>
@@ -94,6 +94,30 @@
         <xsl:when test="local-name() = 'InsertStatement'">
           <xsl:apply-templates select = "." />
           <xsl:call-template name="_EndOfStatement" />
+        </xsl:when>
+        <xsl:when test="local-name() = 'DeclareCursorStatement'">
+          <xsl:apply-templates select = "." />
+          <xsl:call-template name="_LineBreak" />
+        </xsl:when>
+        <xsl:when test="local-name() = 'OpenCursorStatement'">
+          <xsl:apply-templates select = "." />
+          <xsl:call-template name="_EndOfStatement" />
+        </xsl:when>
+        <xsl:when test="local-name() = 'FetchCursorStatement'">
+          <xsl:apply-templates select = "." />
+          <xsl:call-template name="_EndOfStatement" />
+        </xsl:when>
+        <xsl:when test="local-name() = 'WhileStatement'">
+          <xsl:apply-templates select = "." />
+          <xsl:call-template name="_EndOfStatement" />
+        </xsl:when>
+        <xsl:when test="local-name() = 'CloseCursorStatement'">
+          <xsl:apply-templates select = "." />
+          <xsl:call-template name="_EndOfStatement" />
+        </xsl:when>
+        <xsl:when test="local-name() = 'DeallocateCursorStatement'">
+          <xsl:apply-templates select = "." />
+          <xsl:call-template name="_LineBreak" />
         </xsl:when>
         <xsl:otherwise>
           <xsl:call-template name ="_UnknownToken" />
@@ -213,8 +237,7 @@
     <xsl:apply-templates select="StatementList"/>
     <xsl:call-template name="_IndentDec" />
     <xsl:call-template name="_LineBreak" />  
-    <xsl:text>END</xsl:text>      
-    <xsl:call-template name="_LineBreak" />
+    <xsl:text>END</xsl:text>
   </xsl:template>
 
   <xsl:template match="StatementList">
@@ -222,7 +245,11 @@
   </xsl:template>
 
   <xsl:template match="DeclareVariableStatement">
-    <xsl:text>/* Variable declaration moved into begin of execution statement */</xsl:text>
+    <xsl:text>/* Variable declaration moved to begin of execution block */</xsl:text>
+  </xsl:template>
+
+  <xsl:template match="DeclareCursorStatement">
+    <xsl:text>/* Cursor declaration moved to begin of execution bloc */</xsl:text>
   </xsl:template>
   
   <xsl:template match="ReturnStatement">
@@ -272,7 +299,6 @@
       <xsl:call-template name="_LineBreak" />  
     </xsl:if>
     <xsl:text>END IF</xsl:text>
-    <xsl:call-template name="_LineBreak" /> 
   </xsl:template>
 
   <xsl:template match="ThenStatement">
@@ -337,6 +363,52 @@
         <xsl:text>!UNKNOWN!</xsl:text>
       </xsl:otherwise>
     </xsl:choose>
+  </xsl:template>
+
+  <xsl:template match="OpenCursorStatement">
+    <xsl:text>OPEN </xsl:text>
+    <xsl:apply-templates select="Cursor/CursorId/Name/IdentifierOrValueExpression/Identifier"/>    
+  </xsl:template>
+
+  <xsl:template match="FetchCursorStatement">
+    <xsl:text>FETCH </xsl:text>
+    <xsl:choose>
+      <xsl:when test="FetchType/@Orientation='Next'">
+        <xsl:text>NEXT </xsl:text>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:value-of select="FetchType/@Orientation"/>
+      </xsl:otherwise>
+    </xsl:choose>
+    <xsl:text>FROM </xsl:text>
+    <xsl:apply-templates select="Cursor/CursorId/Name/IdentifierOrValueExpression/Identifier"/> 
+    <xsl:text> INTO </xsl:text>
+    <xsl:for-each select="IntoVariables/VariableReference">
+      <xsl:if test="position() > 1">
+        <xsl:text>, </xsl:text>
+      </xsl:if>
+      <xsl:apply-templates select="."/>
+    </xsl:for-each>
+  </xsl:template>
+
+  <xsl:template match="WhileStatement">
+    <xsl:text>WHILE </xsl:text>
+    <xsl:apply-templates select="Predicate"/>
+    <xsl:text> LOOP</xsl:text>
+    <xsl:call-template name="_IndentInc" />
+    <xsl:call-template name="_LineBreak" />
+    <xsl:apply-templates select="Statement"/>
+    <xsl:call-template name="_IndentDec" />
+    <xsl:call-template name="_LineBreak" />
+    <xsl:text>END LOOP</xsl:text>
+  </xsl:template>
+  <xsl:template match="CloseCursorStatement">
+    <xsl:text>CLOSE </xsl:text>
+    <xsl:apply-templates select="Cursor/CursorId/Name/IdentifierOrValueExpression/Identifier"/>
+  </xsl:template>
+
+    <xsl:template match="DeallocateCursorStatement">
+    <xsl:text>/* SKIPPED Deallocate cursor statement */</xsl:text>
   </xsl:template>
 
 </xsl:stylesheet>
