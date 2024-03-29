@@ -107,5 +107,10 @@ namespace ms2pg.PgScripter
         {
             return str.ToLower();
         }
+
+        public string DoubleQuotes (string str)
+        {
+            return str.Replace("'", "''");
+        }
     }
 }

@@ -108,7 +108,7 @@
   
   <xsl:template match="StringLiteral">
     <xsl:text>'</xsl:text>
-    <xsl:value-of select="@Value"/>
+    <xsl:value-of select="ms2pg:DoubleQuotes(@Value)"/>
     <xsl:text>'</xsl:text>
   </xsl:template>
 
@@ -276,7 +276,9 @@
     <xsl:call-template name="_IndentInc" />
     <xsl:call-template name="_LineBreak" />
     <xsl:apply-templates select="QueryExpression"/>
+    <xsl:call-template name="_IndentDec" />
     <xsl:text>)</xsl:text>
+    <xsl:call-template name="_IndentDec" />    
   </xsl:template>
   <xsl:template match="Predicate">
     <xsl:apply-templates select="*"/>
@@ -403,14 +405,25 @@
 
   <xsl:template match="GlobalVariableExpression">
     <xsl:choose>
-      <xsl:when test="@Name='@@fetch_status'">
+      <xsl:when test="ms2pg:ToLower(@Name)='@@fetch_status'">
         <xsl:text>CASE WHEN FOUND THEN 0 ELSE -1 END</xsl:text>
       </xsl:when>
+      <xsl:when test="ms2pg:ToLower(@Name)='@@spid'">
+        <xsl:text>pg_backend_pid()</xsl:text>
+      </xsl:when>
+      <xsl:when test="ms2pg:ToLower(@Name)='@@servername'">
+        <xsl:text>inet_server_addr()</xsl:text>
+      </xsl:when>
       <xsl:otherwise>
-        <xsl:text>/*!UNKNOWN! GLOBAL VARIABLE *</xsl:text>
+        <xsl:text>/*!UNKNOWN! GLOBAL VARIABLE </xsl:text>
         <xsl:value-of select="@Name"/>
+        <xsl:text> */</xsl:text>
       </xsl:otherwise>
     </xsl:choose>
+  </xsl:template>
+
+  <xsl:template match="Value">
+    <xsl:apply-templates select="*"/>
   </xsl:template>
   
 </xsl:stylesheet>

@@ -52,15 +52,7 @@
       <xsl:text>DECLARE </xsl:text>
       <xsl:call-template name="_LineBreak" />
       <xsl:for-each select="//DeclareVariableElement">
-        <xsl:apply-templates select="VariableName"/>
-        <xsl:text> </xsl:text>
-        <xsl:apply-templates select="DataType"/>
-        <xsl:if test="Value">
-          <xsl:text> := </xsl:text>
-          <xsl:apply-templates select="Value"/>
-        </xsl:if>
-        <xsl:text>;</xsl:text>
-        <xsl:call-template name="_LineBreak" />
+        <xsl:apply-templates select="."/>
       </xsl:for-each>
       <xsl:for-each select="//DeclareCursorStatement">
         <xsl:apply-templates select="Name/Identifier"/>
@@ -73,7 +65,7 @@
         <xsl:text>)</xsl:text>
         <xsl:call-template name="_IndentDec" />
         <xsl:text>;</xsl:text>
-          <xsl:call-template name="_LineBreak" />
+        <xsl:call-template name="_LineBreak" />
       </xsl:for-each>
       <xsl:call-template name="_IndentDec" />
       <xsl:call-template name="_LineBreak" />
@@ -86,7 +78,16 @@
     <xsl:text>$$</xsl:text>
   </xsl:template>
 
-
-
+  <xsl:template match="DeclareVariableElement">
+    <xsl:apply-templates select="VariableName"/>
+    <xsl:text> </xsl:text>
+    <xsl:apply-templates select="DataType"/>
+    <xsl:if test="Value">
+      <xsl:text> := </xsl:text>
+      <xsl:apply-templates select="Value"/>
+    </xsl:if>
+    <xsl:text>;</xsl:text>
+    <xsl:call-template name="_LineBreak" />
+  </xsl:template>
 
 </xsl:stylesheet>

@@ -119,6 +119,14 @@
           <xsl:apply-templates select = "." />
           <xsl:call-template name="_LineBreak" />
         </xsl:when>
+        <xsl:when test="local-name() = 'ExecuteStatement'">
+          <xsl:apply-templates select = "." />
+          <xsl:call-template name="_EndOfStatement" />
+        </xsl:when>
+        <xsl:when test="local-name() = 'PrintStatement'">
+          <xsl:apply-templates select = "." />
+          <xsl:call-template name="_EndOfStatement" />
+        </xsl:when>
         <xsl:otherwise>
           <xsl:call-template name ="_UnknownToken" />
           <xsl:call-template name="_LineBreak" />
@@ -191,15 +199,19 @@
   <!-- Update statement specification -->
   <xsl:template match="UpdateSpecification">
     <xsl:text>UPDATE </xsl:text>
-    <xsl:apply-templates select="Target/SchemaObject/Identifiers" />
+    <xsl:apply-templates select="Target/NamedTableReference/SchemaObject/SchemaObjectName/Identifiers" />
     <xsl:call-template name="_LineBreak" />
     <xsl:text>SET </xsl:text>
     <xsl:call-template name="_IndentInc" />
     <xsl:call-template name="_LineBreak" />
-    <xsl:for-each select="SetClauses/AssignmentSetClause">
-      <xsl:apply-templates select="Column/MultiPartIdentifier/Identifiers" />
+    <xsl:for-each select="SetClauses/AssignmentSetClause">     
+      <xsl:if test="position()>1">
+        <xsl:text>, </xsl:text>
+        <xsl:call-template name="_LineBreak" />
+      </xsl:if>
+      <xsl:apply-templates select="Column/ColumnReferenceExpression/MultiPartIdentifier/Identifiers" />
       <xsl:text> = </xsl:text>
-      <xsl:apply-templates select="NewValue" />
+      <xsl:apply-templates select="NewValue/*" />
     </xsl:for-each>
     <xsl:call-template name="_IndentDec" />
     <xsl:call-template name="_LineBreak" />
@@ -227,8 +239,8 @@
 
   
   <xsl:template match="BeginEndBlockStatement">
-    <xsl:call-template name="_IndentInc" />
     <xsl:text>BEGIN</xsl:text>
+    <xsl:call-template name="_IndentInc" />
     <xsl:call-template name="_LineBreak" />
     <xsl:if test="ancestor::CreateFunctionStatement/ReturnType/TableValuedFunctionReturnType and not(ancestor::BeginEndBlockStatement)">
       <xsl:apply-templates select="ancestor::CreateFunctionStatement/ReturnType/TableValuedFunctionReturnType/DeclareTableVariableBody"/>
@@ -264,6 +276,9 @@
         <xsl:apply-templates select="Variable"/>
         <xsl:value-of select="CreateFunctionStatement/ReturnType/TableValuedFunctionReturnType/DeclareTableVariableBody"/>
         <xsl:apply-templates select="ancestor::CreateFunctionStatement/ReturnType/TableValuedFunctionReturnType/DeclareTableVariableBody/VariableName"/>        
+      </xsl:when>
+      <xsl:when test="ancestor::CreateProcedureStatement">
+        <xsl:text></xsl:text>
       </xsl:when>
       <xsl:when test="Expression">
         <xsl:apply-templates select="Expression"/>
@@ -407,8 +422,39 @@
     <xsl:apply-templates select="Cursor/CursorId/Name/IdentifierOrValueExpression/Identifier"/>
   </xsl:template>
 
-    <xsl:template match="DeallocateCursorStatement">
+  <xsl:template match="DeallocateCursorStatement">
     <xsl:text>/* SKIPPED Deallocate cursor statement */</xsl:text>
+  </xsl:template>
+
+  <xsl:template match="ExecuteStatement">
+    <xsl:text>CALL </xsl:text>
+    <xsl:apply-templates select="ExecuteSpecification/ExecutableEntity/ExecutableProcedureReference/ProcedureReference/ProcedureReferenceName/ProcedureReference/Name/SchemaObjectName/Identifiers"/>
+    <xsl:text>(</xsl:text>
+    <xsl:call-template name="_IndentInc" />
+    <xsl:call-template name="_IndentInc" />
+    <xsl:for-each select="ExecuteSpecification/ExecutableEntity/ExecutableProcedureReference/Parameters/ExecuteParameter">
+      <xsl:if test="position() > 1">
+        <xsl:text>, </xsl:text>
+      </xsl:if>
+      <xsl:call-template name="_LineBreak" />
+      <xsl:if test="Variable">
+        <xsl:apply-templates select="Variable"/>
+        <xsl:text> => </xsl:text>
+      </xsl:if>
+      <xsl:apply-templates select="ParameterValue/*"/>
+      <xsl:if test="@IsOutput='true'">
+        <xsl:text> OUT</xsl:text>
+      </xsl:if>
+    </xsl:for-each>
+    <xsl:call-template name="_IndentDec" />
+    <xsl:call-template name="_LineBreak" />
+    <xsl:text>)</xsl:text>
+    <xsl:call-template name="_IndentDec" />
+  </xsl:template>
+
+  <xsl:template match="PrintStatement">
+    <xsl:text>RAISE NOTICE '%', </xsl:text>
+    <xsl:apply-templates select="Expression"/>
   </xsl:template>
 
 </xsl:stylesheet>
