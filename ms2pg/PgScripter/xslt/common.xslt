@@ -56,15 +56,15 @@
     <xsl:text>$$</xsl:text>
     <xsl:call-template name="_LineBreak" />
     <xsl:text>BEGIN</xsl:text>
-    <xsl:call-template name="_LineBreak" />
     <xsl:call-template name="_IndentInc" />
+    <xsl:call-template name="_LineBreak" />
   </xsl:template>
 
     <!-- end of code block -->
   <xsl:template name="_DoEnd">
-    <xsl:call-template name="_LineBreak" />
     <xsl:call-template name="_IndentDec" />
-    <xsl:text>END;</xsl:text>
+    <xsl:call-template name="_LineBreak" />
+    <xsl:text>END</xsl:text>
     <xsl:call-template name="_LineBreak" />
     <xsl:text>$$</xsl:text>
     <xsl:call-template name="_LineBreak" />

@@ -4,7 +4,7 @@ using System.Xml;
 
 namespace ms2pg.Config
 {
-    internal class Config : Dictionary<string, string>
+    public class Config : Dictionary<string, string>
     {
         public string ConfigFileName { get; }
         public Config(string configFileName = "config.xml")

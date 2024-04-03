@@ -165,7 +165,7 @@
           <xsl:text>coalesce</xsl:text>
         </xsl:when>
         <xsl:when test="$function_name = 'newid'">
-          <xsl:text>uuid_generate_v4</xsl:text>
+          <xsl:text>public.uuid_generate_v4</xsl:text>
         </xsl:when>
         <xsl:when test="$function_name = 'db_name'">
           <xsl:text>current_database</xsl:text>

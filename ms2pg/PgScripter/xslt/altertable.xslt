@@ -4,38 +4,31 @@
 >
 
   <!-- Alter table add statement -->
-  <xsl:template match="AlterTableAddTableElementStatement">
-    <xsl:variable name="if_exists" select="Definition/TableDefinition/TableConstraints/UniqueConstraintDefinition[@IsPrimaryKey='True']
-      and $create_primary_key_if_not_exists" />
-    <xsl:if test="$if_exists">      
-      <xsl:call-template name="_DoBegin" />
-      <xsl:text>IF NOT EXISTS (</xsl:text>
-      <xsl:call-template name="_IndentInc" />
-      <xsl:call-template name="_IndentInc" />
-      <xsl:call-template name="_LineBreak" />
-      <xsl:text>SELECT *</xsl:text>
-      <xsl:call-template name="_LineBreak" />
-      <xsl:text>FROM information_schema.table_constraints</xsl:text>
-      <xsl:call-template name="_LineBreak" />
-      <xsl:text>WHERE table_name = LOWER('</xsl:text>
-      <xsl:apply-templates select="SchemaObjectName" />
-      <xsl:text>')</xsl:text>
-      <xsl:call-template name="_IndentInc" />
-      <xsl:call-template name="_LineBreak" />
-      <xsl:text> AND constraint_type = 'PRIMARY KEY') THEN</xsl:text>
-      <xsl:call-template name="_IndentDec" />
-      <xsl:call-template name="_IndentDec" />
-      <xsl:call-template name="_LineBreak" />
-    </xsl:if>
+  <xsl:template match="AlterTableAddTableElementStatement">      
+    <xsl:call-template name="_DoBegin" />
+    <xsl:text>BEGIN</xsl:text>
+    <xsl:call-template name="_IndentInc" />
+    <xsl:call-template name="_LineBreak" />
     <xsl:text>ALTER TABLE </xsl:text>
-    <xsl:apply-templates select="SchemaObjectName" />
+    <xsl:apply-templates select="SchemaObjectName/Identifiers"/>
     <xsl:text> </xsl:text>
     <xsl:apply-templates select="Definition/TableDefinition/TableConstraints" />
-    <xsl:if test="$if_exists">
-      <xsl:call-template name="_IndentDec" />
-      <xsl:text>;END IF;</xsl:text>
-      <xsl:call-template name="_DoEnd" />
-    </xsl:if>
+    <xsl:call-template name="_EndOfStatement" />
+    <xsl:call-template name="_IndentDec" />    
+    <xsl:call-template name="_LineBreak" />
+    <xsl:text>EXCEPTION</xsl:text>
+    <xsl:call-template name="_IndentInc" />
+    <xsl:call-template name="_LineBreak" />
+    <xsl:text>WHEN duplicate_table THEN RAISE NOTICE 'duplicate table exception';</xsl:text>
+    <xsl:call-template name="_LineBreak" />
+    <xsl:text>WHEN duplicate_object THEN RAISE NOTICE 'duplicate object exception';</xsl:text>
+    <xsl:call-template name="_LineBreak" />
+    <xsl:text>WHEN invalid_table_definition  THEN RAISE NOTICE 'invalid table definition exception';</xsl:text>
+    <xsl:call-template name="_IndentDec" />
+    <xsl:call-template name="_LineBreak" />
+    <xsl:text>END;</xsl:text>
+    <xsl:call-template name="_LineBreak" />
+    <xsl:call-template name="_DoEnd" />
     <!-- TODO: Column definitions -->
     <!-- TODO: Indexes -->
   </xsl:template>
@@ -53,12 +46,22 @@
         <xsl:when test="local-name() = 'UniqueConstraintDefinition'">
           <xsl:if test="ancestor::AlterTableAddTableElementStatement">
             <xsl:text>ADD </xsl:text>
+            <xsl:if test="ConstraintIdentifie/Identifier">
+              <xsl:text>CONSTRAINT </xsl:text>
+              <xsl:apply-templates select="ConstraintIdentifier/Identifier"/>
+              <xsl:text> </xsl:text>
+            </xsl:if>
           </xsl:if>
           <xsl:apply-templates select="." />
         </xsl:when>
         <xsl:when test="local-name() = 'ForeignKeyConstraintDefinition'">
           <xsl:if test="ancestor::AlterTableAddTableElementStatement">
             <xsl:text>ADD </xsl:text>
+            <xsl:if test="ConstraintIdentifier/Identifier">
+              <xsl:text>CONSTRAINT </xsl:text>
+              <xsl:apply-templates select="ConstraintIdentifier/Identifier"/>
+              <xsl:text> </xsl:text>
+            </xsl:if>
           </xsl:if>
           <xsl:apply-templates select="." />
         </xsl:when>     

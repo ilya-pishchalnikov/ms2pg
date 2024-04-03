@@ -3,10 +3,10 @@
   xmlns:msxsl="urn:schemas-microsoft-com:xslt" exclude-result-prefixes="msxsl"
 >
   <xsl:template match="DataType">
-    <xsl:apply-templates select="SqlDataTypeReference"/>
+    <xsl:apply-templates select="SqlDataTypeReference|XmlDataTypeReference"/>
   </xsl:template>
   <!-- Data type -->
-  <xsl:template match="SqlDataTypeReference">
+  <xsl:template match="SqlDataTypeReference|XmlDataTypeReference">
     <xsl:variable name="datatype">
       <xsl:apply-templates select="Name/SchemaObjectName" />
     </xsl:variable>
