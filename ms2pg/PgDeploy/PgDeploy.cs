@@ -4,6 +4,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
 using Microsoft.Data.SqlClient;
 using Microsoft.SqlServer.Management.Common;
+using Microsoft.SqlServer.TransactSql.ScriptDom;
 using Microsoft.VisualBasic;
 using Npgsql;
 
@@ -71,14 +72,22 @@ namespace ms2pg.PgDeploy
                     .Split(',')
                     .Where(x => !String.IsNullOrEmpty(x)));
             }
-
+            
             var ErrorCount = 1000;
+
+            if (config.ContainsKey("deploy-retry-count"))
+            {
+                ErrorCount = Int32.Parse(config["deploy-retry-count"]);
+            }
+
             var connectionString = config["pg-connection-string"];
             using (var connection = new Npgsql.NpgsqlConnection(connectionString))
             {
                 connection.Open();
 
                 var batches = new Queue<String>();
+                var errors = string.Empty;
+                var unsolvableCount = 0;
 
                 foreach (var file in files)
                 {
@@ -95,21 +104,30 @@ namespace ms2pg.PgDeploy
                             }
                             catch (PostgresException ex)
                             {
-                                if (ErrorsSolver.Solve(ex, fileBatches, i, file))
+                                var solveResult = ErrorsSolver.Solve(ex, fileBatches, i, file);
+                                switch (solveResult)
                                 {
-                                    Console.WriteLine ("Error fixed");
-                                    i--;
+                                    case ErrorsSolver.SolveResult.Solved:
+                                        Console.WriteLine ("Error fixed");
+                                        i--;
+                                        batches.Enqueue(fileBatches[i]);
+                                        break;
+                                    case ErrorsSolver.SolveResult.Unsolved:
+                                        ErrorCount--;
+                                        batches.Enqueue(fileBatches[i]);
+                                        break;
+                                    case ErrorsSolver.SolveResult.Unsolvable:
+                                        errors += fileBatches[i] + "\n\n/*GO*/\n\n";
+                                        ErrorCount--;
+                                        unsolvableCount++;
+                                        break;
                                 }
-                                else 
-                                {
-                                    ErrorCount--;
-                                }
-                                batches.Enqueue(fileBatches[i]);
+                                
                                 Console.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}\terror while deploying file \t{file}: {ex.Message}");
                                 if (ErrorCount <= 0)
                                 {
-                                    File.WriteAllText("errors.sql", batches.Where(x => x.Contains("!ERROR IN BATCH!")).Aggregate( (x, y) => x + "\n\n/*GO*/\n\n" + y));
-                                    throw new ApplicationException($"Error count exceeds limit. Undeployed batches ({batches.Count}) saved to errors.sql");
+                                    File.WriteAllText("errors.sql", errors + batches.Where(x => x.Contains("!ERROR IN BATCH!")).Aggregate( (x, y) => x + "\n\n/*GO*/\n\n" + y));
+                                    throw new ApplicationException($"Error count exceeds limit. Undeployed batches ({batches.Count + unsolvableCount}) saved to errors.sql");
                                     throw new ApplicationException("Error count exceeds limit");
                                 }
                             }
@@ -136,8 +154,8 @@ namespace ms2pg.PgDeploy
                             File.WriteAllText("errors.sql", batches.Aggregate( (x, y) => x + "\n\n/*GO*/\n\n" + y));
                              throw new ApplicationException($"Error count exceeds limit. Undeployed batches ({batches.Count}) saved to errors.sql");
                         }
-                        if (ErrorCount > batches.Count + 1){
-                            ErrorCount = batches.Count + 1;
+                        if (ErrorCount > batches.Count * batches.Count){
+                            ErrorCount = batches.Count * batches.Count;
                         }
                     }
                 }

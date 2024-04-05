@@ -10,5 +10,8 @@
   <property name="is-debug-messages"                   value="false"/>
   <property name="is-xml-enumerables-name-like-parent" value="true"/>
   <property name="excluded-properties"                 value="ScriptTokenStream"/>
+  <property name="deploy-retry-count"                  value="100000"/>
+  <property name="empty-ms-folder-exclude"             value=""/>
+  <property name="empty-pg-folder-exclude"             value="\.pre\"/>
   <property name="file-name-contains-filters"          value="" />
 </ms2pg-config>

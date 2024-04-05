@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Microsoft.SqlServer.TransactSql.ScriptDom;
 
 namespace ms2pg.PgDeploy
 {
     public static class ErrorsSolver
     {
-        public static bool Solve(Npgsql.PostgresException exception, string[] batches, int batchIndex, string fileName)
+        public enum SolveResult {Solved, Unsolved, Unsolvable};
+        public static SolveResult Solve(Npgsql.PostgresException exception, string[] batches, int batchIndex, string fileName)
         {
             var batch = batches[batchIndex];
             string fixedBatch = null;
@@ -138,13 +140,15 @@ namespace ms2pg.PgDeploy
                         fixedBatch = beforeErrorBatchPart + " || " + afterErrorBatchPart;
                     }
                     break;
+                case "42601" :
+                    return SolveResult.Unsolvable;
             }
 
             if (fixedBatch != null)
             {
                 batches[batchIndex] = fixedBatch;
                 File.WriteAllText(fileName, batches.Aggregate((x, y) => x + "\n{{GO}}\n" + y));
-                return true;
+                return SolveResult.Solved;
             }
             else
             {
@@ -159,7 +163,7 @@ namespace ms2pg.PgDeploy
                         + batch.Substring(position - 1);
                 batches[batchIndex] = fixedBatch;
                 File.WriteAllText(fileName, batches.Aggregate((x, y) => x + "\n{{GO}}\n" + y));
-                return false;
+                return SolveResult.Unsolved;
             }
         }
     }
