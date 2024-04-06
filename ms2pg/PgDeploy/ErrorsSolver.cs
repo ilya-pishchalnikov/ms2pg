@@ -17,6 +17,7 @@ namespace ms2pg.PgDeploy
             int position = 1;
             var beforeErrorBatchPart = string.Empty;
             var afterErrorBatchPart = string.Empty;
+            var solveResult = SolveResult.Unsolved;
             switch (exception.Data["SqlState"])
             {
                 case "42883": // Operator does not exist
@@ -141,7 +142,18 @@ namespace ms2pg.PgDeploy
                     }
                     break;
                 case "42601" :
-                    return SolveResult.Unsolvable;
+                    solveResult = SolveResult.Unsolvable;
+                    break;
+                case "42704" :
+                    messageText = exception.Data["MessageText"] as string;
+                    if (messageText.Contains("serial_in_function_return"))
+                    {
+                        var splitted = batch.Split("SERIAL_IN_FUNCTION_RETURN");
+                        if (splitted.Count() == 3) {
+                            fixedBatch = splitted[0] + "INT" + splitted[1] + "SERIAL" + splitted[2];
+                        }
+                    }
+                    break;
             }
 
             if (fixedBatch != null)
@@ -163,7 +175,7 @@ namespace ms2pg.PgDeploy
                         + batch.Substring(position - 1);
                 batches[batchIndex] = fixedBatch;
                 File.WriteAllText(fileName, batches.Aggregate((x, y) => x + "\n{{GO}}\n" + y));
-                return SolveResult.Unsolved;
+                return solveResult;
             }
         }
     }

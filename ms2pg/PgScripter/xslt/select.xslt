@@ -56,6 +56,10 @@
           <xsl:apply-templates select="Expression" />
         </xsl:when>
         <xsl:when test="local-name()='SelectStarExpression'">
+          <xsl:if test="Qualifier/MultiPartIdentifier">
+            <xsl:apply-templates select="Qualifier/MultiPartIdentifier/Identifiers"/>
+            <xsl:text>.</xsl:text>
+          </xsl:if>
           <xsl:text>*</xsl:text>
         </xsl:when>
         <xsl:otherwise></xsl:otherwise>
@@ -63,6 +67,11 @@
       <xsl:if test="ColumnName/node()">
         <xsl:text> AS </xsl:text>
         <xsl:apply-templates select="ColumnName/IdentifierOrValueExpression/Identifier" />
+        <xsl:if test="ColumnName/IdentifierOrValueExpression/ValueExpression/StringLiteral">
+          <xsl:text>"</xsl:text>
+          <xsl:value-of select="ColumnName/IdentifierOrValueExpression/ValueExpression/StringLiteral/@Value"/>
+          <xsl:text>"</xsl:text>
+        </xsl:if>
       </xsl:if>
     </xsl:for-each>
     <xsl:if test="SelectSetVariable">
@@ -139,7 +148,7 @@
     </xsl:template>
 
     <xsl:template match="TableReference|FirstTableReference|SecondTableReference">
-      <xsl:apply-templates select="NamedTableReference|QualifiedJoin|UnqualifiedJoin|QueryDerivedTable"/>
+      <xsl:apply-templates select="NamedTableReference|QualifiedJoin|UnqualifiedJoin|QueryDerivedTable|SchemaObjectFunctionTableReference"/>
     </xsl:template>
 
     <xsl:template match="QueryDerivedTable">
@@ -193,26 +202,38 @@
       <xsl:call-template name="_LineBreak" />
       <xsl:choose>
         <xsl:when test="@QualifiedJoinType='LeftOuter'">
-          <xsl:text>LEFT </xsl:text>
+          <xsl:text>LEFT JOIN </xsl:text>
         </xsl:when>
         <xsl:when test="@QualifiedJoinType='RightOuter'">
-          <xsl:text>RIGHT </xsl:text>
+          <xsl:text>RIGHT JOIN </xsl:text>
         </xsl:when>
         <xsl:when test="@QualifiedJoinType='FullOuter'">
-          <xsl:text>FULL </xsl:text>
+          <xsl:text>FULL JOIN </xsl:text>
         </xsl:when>
         <xsl:when test="@UnqualifiedJoinType='CrossJoin'">
-          <xsl:text>CROSS </xsl:text>
+          <xsl:text>CROSS JOIN </xsl:text>
         </xsl:when>
         <xsl:when test="@QualifiedJoinType='Inner'">
-          <xsl:text>INNER </xsl:text>
+          <xsl:text>INNER JOIN </xsl:text>
         </xsl:when>
-        <xsl:otherwise></xsl:otherwise>
+        <xsl:when test="@UnqualifiedJoinType='CrossApply'">
+          <xsl:text>INNER JOIN LATERAL </xsl:text>
+        </xsl:when>
+        <xsl:when test="@UnqualifiedJoinType='OuterApply'">
+          <xsl:text>LEFT JOIN LATERAL </xsl:text>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:text>UNKNOWN TYPE OF JOIN</xsl:text>
+        </xsl:otherwise>
       </xsl:choose>
-      <xsl:text>JOIN </xsl:text>
       <xsl:apply-templates select ="SecondTableReference" />
-      <xsl:if test="SearchCondition">
+      <xsl:if test="SearchCondition or @UnqualifiedJoinType='CrossApply' or @UnqualifiedJoinType='OuterApply'">
         <xsl:text> ON </xsl:text>
+        <xsl:choose>
+          <xsl:when test="@UnqualifiedJoinType='CrossApply' or @UnqualifiedJoinType='OuterApply'">
+            <xsl:text> true  </xsl:text>
+          </xsl:when>
+        </xsl:choose>
         <xsl:apply-templates select="SearchCondition" />
       </xsl:if>
     </xsl:template>
@@ -241,7 +262,18 @@
 
     <!-- From clause -->
     <xsl:template match="SchemaObject">
-        <xsl:apply-templates select ="SchemaObjectName/Identifiers" />
-      </xsl:template>  
+      <xsl:apply-templates select ="SchemaObjectName/Identifiers" />
+    </xsl:template>  
     
+    <xsl:template match="SchemaObjectFunctionTableReference">
+      <xsl:apply-templates select="SchemaObject"/>
+      <xsl:text>(</xsl:text>
+      <xsl:apply-templates select="Parameters"/>
+      <xsl:text>)</xsl:text>
+      <xsl:if test="Alias/Identifier">
+        <xsl:text> AS </xsl:text>
+        <xsl:apply-templates select="Alias/Identifier"/>
+      </xsl:if>
+    </xsl:template>
+
 </xsl:stylesheet>

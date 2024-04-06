@@ -34,11 +34,11 @@ namespace ms2pg
             stopWatch.Reset();
 
             stopWatch.Start();
-            // PgScripter.PgScripter.pgScript(config);
+            PgScripter.PgScripter.pgScript(config);
             stopWatch.Stop();
             var pgScriptDuration = stopWatch.ElapsedMilliseconds;
             stopWatch.Reset();
-            
+
             stopWatch.Start();   
             try
             {

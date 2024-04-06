@@ -53,7 +53,7 @@ namespace ms2pg.MsScripter
 
         private static IEnumerable<Type> GetBaseTypes(this Type? type)
         {
-            if (type == null) return null;
+            if (type == null) return new List<Type>();
             if(type.BaseType == null) return type.GetInterfaces();
 
                 return Enumerable.Repeat(type.BaseType, 1)

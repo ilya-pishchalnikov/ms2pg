@@ -12,6 +12,10 @@ namespace ms2pg.PgScripter
 {
     internal partial class MsParsedToPgXsltTransform
     {
+
+        private static XslCompiledTransform xslt = null;
+        private static XsltArgumentList xsltArguments = null;
+
         /// <summary>
         /// Generates Postgre Sql script from xml file with parsed MS SQL script
         /// </summary>
@@ -24,15 +28,19 @@ namespace ms2pg.PgScripter
         {
             try 
             {
-                var xslt = new XslCompiledTransform();
-                var xsltSettings = new XsltSettings(true, true);
 
-                var xsltArguments = new XsltArgumentList();
-                
-                xslt.Load(xsltFileName, xsltSettings, new XmlUrlResolver());
+                if (xslt == null) 
+                {
+                    xslt = new XslCompiledTransform();
+                    var xsltSettings = new XsltSettings(true, true);
 
-                var xsltExtensions = new XsltExtensions();
-                xsltArguments.AddExtensionObject("urn:ms2pg", xsltExtensions);
+                    xsltArguments = new XsltArgumentList();
+                    
+                    xslt.Load(xsltFileName, xsltSettings, new XmlUrlResolver());
+
+                    var xsltExtensions = new XsltExtensions();
+                    xsltArguments.AddExtensionObject("urn:ms2pg", xsltExtensions);
+                }
                 //Execute the XSLT transform.
                 using (var outputStream = new FileStream(outputFileName, FileMode.Create))
                 {

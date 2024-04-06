@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+                xmlns:ms2pg="urn:ms2pg"  >
  <!-- Statements choose -->
   <xsl:template match="Statements|Statement">
     <xsl:for-each select="*">
@@ -124,6 +125,10 @@
           <xsl:call-template name="_EndOfStatement" />
         </xsl:when>
         <xsl:when test="local-name() = 'PrintStatement'">
+          <xsl:apply-templates select = "." />
+          <xsl:call-template name="_EndOfStatement" />
+        </xsl:when>
+        <xsl:when test="local-name() = 'CreateSchemaStatement'">
           <xsl:apply-templates select = "." />
           <xsl:call-template name="_EndOfStatement" />
         </xsl:when>
@@ -326,13 +331,17 @@
   </xsl:template>
 
   <xsl:template match="DeclareTableVariableBody">
-    <xsl:text>CREATE TABLE IF NOT EXISTS tmp_</xsl:text>
+    <xsl:text>CREATE TEMP TABLE IF NOT EXISTS tmp_</xsl:text>
     <xsl:apply-templates select="VariableName"/>
     <xsl:apply-templates select="Definition/TableDefinition"/>
   </xsl:template>
 
   <xsl:template match="InsertStatement">
-    <xsl:text>INSERT INTO tmp_</xsl:text>
+    <xsl:if test="WithCtesAndXmlNamespaces">
+      <xsl:apply-templates select="WithCtesAndXmlNamespaces"/>
+    </xsl:if>
+    
+    <xsl:text>INSERT INTO </xsl:text>
     <xsl:if test="InsertSpecification/Target/VariableTableReference">
       <xsl:text>tmp_</xsl:text>
     </xsl:if>
@@ -455,6 +464,37 @@
   <xsl:template match="PrintStatement">
     <xsl:text>RAISE NOTICE '%', </xsl:text>
     <xsl:apply-templates select="Expression"/>
+  </xsl:template>
+
+  <xsl:template match="WithCtesAndXmlNamespaces">
+    <xsl:text>WITH </xsl:text>
+    <xsl:for-each select="CommonTableExpressions/CommonTableExpression">
+      <xsl:if test="position() > 1">
+        <xsl:call-template name="_LineBreak" />
+        <xsl:text>, </xsl:text>
+      </xsl:if>
+      <xsl:apply-templates select="ExpressionName/Identifier"/>
+      <xsl:if test="Columns/node()">
+        <xsl:text> (</xsl:text>
+        <xsl:apply-templates select="Columns"/>
+        <xsl:text>) </xsl:text>
+      </xsl:if>
+      <xsl:text> AS (</xsl:text>
+      <xsl:call-template name="_IndentInc" />
+      <xsl:call-template name="_IndentInc" />
+      <xsl:call-template name="_LineBreak" />
+      <xsl:apply-templates select="QueryExpression"/>
+      <xsl:call-template name="_IndentDec" />
+      <xsl:call-template name="_LineBreak" />
+      <xsl:text>)</xsl:text>      
+      <xsl:call-template name="_IndentDec" />
+      <xsl:call-template name="_LineBreak" />
+    </xsl:for-each>
+  </xsl:template>
+
+  <xsl:template match="CreateSchemaStatement">
+    <xsl:text>CREATE SCHEMA IF NOT EXISTS </xsl:text>
+    <xsl:apply-templates select="Name/Identifier"/>
   </xsl:template>
 
 </xsl:stylesheet>

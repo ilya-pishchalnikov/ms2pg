@@ -86,7 +86,7 @@ namespace ms2pg.PgDeploy
                 connection.Open();
 
                 var batches = new Queue<String>();
-                var errors = string.Empty;
+                var errors = new List<string>();
                 var unsolvableCount = 0;
 
                 foreach (var file in files)
@@ -117,7 +117,7 @@ namespace ms2pg.PgDeploy
                                         batches.Enqueue(fileBatches[i]);
                                         break;
                                     case ErrorsSolver.SolveResult.Unsolvable:
-                                        errors += fileBatches[i] + "\n\n/*GO*/\n\n";
+                                        errors.Add(fileBatches[i]);
                                         ErrorCount--;
                                         unsolvableCount++;
                                         break;
@@ -126,9 +126,8 @@ namespace ms2pg.PgDeploy
                                 Console.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}\terror while deploying file \t{file}: {ex.Message}");
                                 if (ErrorCount <= 0)
                                 {
-                                    File.WriteAllText("errors.sql", errors + batches.Where(x => x.Contains("!ERROR IN BATCH!")).Aggregate( (x, y) => x + "\n\n/*GO*/\n\n" + y));
+                                    File.WriteAllText("errors.sql", errors.Aggregate( (x, y) => x + "\n\n/*GO*/\n\n" + y) + "\n\n/*GO*/\n\n" + batches.Where(x => x.Contains("!ERROR IN BATCH!")).Aggregate( (x, y) => x + "\n\n/*GO*/\n\n" + y));
                                     throw new ApplicationException($"Error count exceeds limit. Undeployed batches ({batches.Count + unsolvableCount}) saved to errors.sql");
-                                    throw new ApplicationException("Error count exceeds limit");
                                 }
                             }
                         }
@@ -151,13 +150,24 @@ namespace ms2pg.PgDeploy
                         Console.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}\terror while deploying batch\nERROR: {ex.Message}");
                         if (ErrorCount <= 0)
                         {
-                            File.WriteAllText("errors.sql", batches.Aggregate( (x, y) => x + "\n\n/*GO*/\n\n" + y));
+                            var errorsString = string.Empty;
+                            if (errors.Count > 0) 
+                            {
+                                errorsString = errors.Aggregate( (x, y) => x + "\n\n/*GO*/\n\n" + y) + "\n\n/*GO*/\n\n";
+                            }
+                            File.WriteAllText("errors.sql",errorsString + batches.Aggregate( (x, y) => x + "\n\n/*GO*/\n\n" + y));
                              throw new ApplicationException($"Error count exceeds limit. Undeployed batches ({batches.Count}) saved to errors.sql");
                         }
                         if (ErrorCount > batches.Count * batches.Count){
                             ErrorCount = batches.Count * batches.Count;
                         }
                     }
+                }
+
+                if (errors.Count > 0)
+                {                            
+                    File.WriteAllText("errors.sql", errors.Aggregate( (x, y) => x + "\n\n/*GO*/\n\n" + y) + "\n\n/*GO*/\n\n" );
+                    throw new ApplicationException($"Error count exceeds limit. Undeployed batches ({unsolvableCount}) saved to errors.sql");
                 }
             }
         }

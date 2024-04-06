@@ -11,6 +11,7 @@
   <!-- Case changing variables -->
   <xsl:variable name="lowercase" select="'abcdefghijklmnopqrstuvwxyz'" />
   <xsl:variable name="uppercase" select="'ABCDEFGHIJKLMNOPQRSTUVWXYZ'" />
-  
+
+  <xsl:variable name="default_schema_name" select="'dbo'"/>
   
 </xsl:stylesheet>

@@ -12,7 +12,8 @@
     </xsl:variable>
     <xsl:variable name="pgType">
       <xsl:choose>
-        <xsl:when test="boolean(ancestor::ColumnDefinition/IdentityOptions)">SERIAL</xsl:when>
+        <xsl:when test="boolean(ancestor::ColumnDefinition/IdentityOptions) and not (ancestor::ReturnType/TableValuedFunctionReturnType)">SERIAL</xsl:when>
+        <xsl:when test="boolean(ancestor::ColumnDefinition/IdentityOptions) and (ancestor::ReturnType/TableValuedFunctionReturnType)">SERIAL_IN_FUNCTION_RETURN</xsl:when>
         <xsl:when test="translate($datatype, $lowercase, $uppercase)='BIGINT'">BIGINT</xsl:when>
         <xsl:when test="translate($datatype, $lowercase, $uppercase)='BINARY'">BYTEA</xsl:when>
         <xsl:when test="translate($datatype, $lowercase, $uppercase)='BIT'">BOOLEAN</xsl:when>

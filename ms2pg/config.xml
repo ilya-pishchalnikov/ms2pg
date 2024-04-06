@@ -1,17 +1,17 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ms2pg-config>
   <property name="ms-connection-string"                value="Server=localhost;Database=lv;Integrated Security=true;Trust Server Certificate=true"/>
-  <property name="pg-connection-string"                value="User ID=postgres;Password=postgres;Host=localhost;Port=5432;Database=ms2pg;"/>
+  <property name="pg-connection-string"                value="User ID=postgres;Password=postgres;Host=127.0.0.1;Port=50000;Database=ms2pg;"/>
   <property name="ms-script-dir"                       value="script/ms"/>
   <property name="ms-parsed-dir"                       value="script/ms"/>
   <property name="pg-script-dir"                       value="script/pg"/>
   <property name="xslt-file-name"                      value="PgScripter/xslt/ms2pg.xslt"/>
-  <property name="pg-deploy-dir-sequence"              value=".pre,Table,View,UserDefinedFunction,StoredProcedure"/>
+  <property name="pg-deploy-dir-sequence"              value=".pre,Schema,Table,View,UserDefinedFunction,StoredProcedure"/>
   <property name="is-debug-messages"                   value="false"/>
   <property name="is-xml-enumerables-name-like-parent" value="true"/>
   <property name="excluded-properties"                 value="ScriptTokenStream"/>
   <property name="deploy-retry-count"                  value="100000"/>
   <property name="empty-ms-folder-exclude"             value=""/>
   <property name="empty-pg-folder-exclude"             value="\.pre\"/>
-  <property name="file-name-contains-filters"          value="" />
+  <property name="file-name-contains-filters"          value=".CYM_V_ORDER_BY_TC." />
 </ms2pg-config>

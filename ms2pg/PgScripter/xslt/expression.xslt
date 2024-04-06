@@ -113,7 +113,15 @@
   </xsl:template>
 
   <xsl:template match="ColumnReferenceExpression">
-    <xsl:apply-templates select="MultiPartIdentifier"/>
+    <xsl:choose>
+      <xsl:when test="@ColumnType='Wildcard'">
+        <xsl:text>*</xsl:text>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:apply-templates select="MultiPartIdentifier"/>
+      </xsl:otherwise>
+    </xsl:choose>
+    
   </xsl:template>
   
   <xsl:template match="UnaryExpression">
@@ -156,6 +164,33 @@
         <xsl:apply-templates select="Parameters/*[1]"/>
         <xsl:text>'</xsl:text>
       </xsl:when>
+      <xsl:when test="$function_name='datediff'">
+        <xsl:text>dbo.DateDiff ('</xsl:text>
+        <xsl:apply-templates select="Parameters/*[1]"/>
+        <xsl:text>', </xsl:text>
+        <xsl:apply-templates select="Parameters/*[2]"/>
+        <xsl:text>, </xsl:text>
+        <xsl:apply-templates select="Parameters/*[3]"/>
+        <xsl:text>)</xsl:text>
+      </xsl:when>
+      <xsl:when test="$function_name='charindex'">
+        <xsl:text>strpos (</xsl:text>
+        <xsl:apply-templates select="Parameters/*[1]"/>
+        <xsl:text>, </xsl:text>
+        <xsl:choose>
+          <xsl:when test="count(Parameters/*) > 2">            
+            <xsl:text>substr(</xsl:text>
+            <xsl:apply-templates select="Parameters/*[2]"/>
+            <xsl:text>, </xsl:text>
+            <xsl:apply-templates select="Parameters/*[3]"/>
+            <xsl:text>)</xsl:text>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:apply-templates select="Parameters/*[2]"/>
+          </xsl:otherwise>
+        </xsl:choose>
+        <xsl:text>)</xsl:text>
+      </xsl:when>
     <xsl:otherwise>      
       <xsl:choose>
         <xsl:when test="$function_name = 'getdate'">
@@ -172,6 +207,9 @@
         </xsl:when>
         <xsl:when test="$function_name = 'char'">
           <xsl:text>chr</xsl:text>
+        </xsl:when>
+        <xsl:when test="$function_name = 'len'">
+          <xsl:text>length</xsl:text>
         </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="$function_name"/>
@@ -425,5 +463,15 @@
   <xsl:template match="Value">
     <xsl:apply-templates select="*"/>
   </xsl:template>
-  
+
+    <xsl:template match="CoalesceExpression">
+      <xsl:text>COALESCE (</xsl:text>
+      <xsl:for-each select="Expressions/*">
+        <xsl:if test="position() > 1">
+          <xsl:text>, </xsl:text>
+        </xsl:if>
+        <xsl:apply-templates select="*"/>
+      </xsl:for-each>
+      <xsl:text>)</xsl:text>
+    </xsl:template>
 </xsl:stylesheet>

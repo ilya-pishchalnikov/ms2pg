@@ -75,6 +75,36 @@
     <xsl:call-template name="_IndentDec"></xsl:call-template>
     <xsl:call-template name="_LineBreak"></xsl:call-template>
     <xsl:call-template name="_LineBreak"></xsl:call-template>
+    <xsl:text>$$;</xsl:text>
+    <xsl:call-template name="_LineBreak" />
+    <xsl:text>Do LANGUAGE plpgsql $$</xsl:text>
+    <xsl:call-template name="_LineBreak" />
+    <xsl:text>declare </xsl:text>
+    <xsl:call-template name="_LineBreak" />
+    <xsl:text>    var_message varchar;</xsl:text>
+    <xsl:call-template name="_LineBreak" />
+    <xsl:text>Begin</xsl:text>
+    <xsl:call-template name="_LineBreak" />
+    <xsl:text>    if exists (select * from public.plpgsql_check_function_tb('</xsl:text>
+    <xsl:apply-templates select="Name/SchemaObjectName/Identifiers" />
+    <xsl:text>') where level = 'error') THEN</xsl:text>
+    <xsl:call-template name="_LineBreak" />
+    <xsl:text>        select 'function: ' || t.functionid || E'\nline no: ' || t.lineno || E'\nMessage: ' || sqlstate || ': ' || "message" || E'\n' || detail || E'\n' || hint as msg </xsl:text>
+    <xsl:call-template name="_LineBreak" />
+    <xsl:text>        into var_message</xsl:text>
+    <xsl:call-template name="_LineBreak" />
+    <xsl:text>        from public.plpgsql_check_function_tb('</xsl:text>
+    <xsl:apply-templates select="Name/SchemaObjectName/Identifiers" />
+    <xsl:text>' ) t</xsl:text>
+    <xsl:call-template name="_LineBreak" />
+    <xsl:text>        where level = 'error';</xsl:text>
+    <xsl:call-template name="_LineBreak" />
+    <xsl:text>         RAISE EXCEPTION '%', var_message;</xsl:text>
+    <xsl:call-template name="_LineBreak" />
+    <xsl:text>    end if;</xsl:text>
+    <xsl:call-template name="_LineBreak" />
+    <xsl:text>End;</xsl:text>
+    <xsl:call-template name="_LineBreak" />
     <xsl:text>$$</xsl:text>
   </xsl:template>
 
