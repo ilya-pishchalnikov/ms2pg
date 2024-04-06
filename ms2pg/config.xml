@@ -13,5 +13,5 @@
   <property name="deploy-retry-count"                  value="100000"/>
   <property name="empty-ms-folder-exclude"             value=""/>
   <property name="empty-pg-folder-exclude"             value="\.pre\"/>
-  <property name="file-name-contains-filters"          value=".CYM_V_ORDER_BY_TC." />
+  <property name="file-name-contains-filters"          value=".CYM_F_GET_FIRST_DEPOSITOR_FOR_SHIPMENTS." />
 </ms2pg-config>

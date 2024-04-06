@@ -37,6 +37,14 @@
         <xsl:text>TABLE </xsl:text>
         <xsl:apply-templates select="ReturnType/TableValuedFunctionReturnType/DeclareTableVariableBody/Definition/TableDefinition" />
       </xsl:when>
+      <xsl:when test="ReturnType/SelectFunctionReturnType">
+        <xsl:text>TABLE (</xsl:text>
+        <xsl:variable name="function_name">
+          <xsl:apply-templates select="Name/SchemaObjectName/Identifiers" />
+        </xsl:variable>
+        <xsl:value-of select="ms2pg:GetTableValuedFunctionTableDefinition($function_name)" />
+        <xsl:text>)</xsl:text>
+      </xsl:when>
       <xsl:otherwise>
         <xsl:text>!UNKNOWN FUNCTION RETURN TYPE!</xsl:text>
       </xsl:otherwise>
@@ -70,8 +78,29 @@
       <xsl:call-template name="_IndentDec" />
       <xsl:call-template name="_LineBreak" />
     </xsl:if>
-
-    <xsl:apply-templates select="StatementList" /> 
+    
+    <xsl:choose>
+      <xsl:when test="StatementList">
+        <xsl:apply-templates select="StatementList" />         
+      </xsl:when>
+      <xsl:when test="ReturnType/SelectFunctionReturnType">
+        <xsl:text>BEGIN</xsl:text>
+        <xsl:call-template name="_IndentInc" />
+        <xsl:call-template name="_LineBreak" />
+        <xsl:text>RETURN QUERY (</xsl:text>
+        <xsl:call-template name="_IndentInc" />
+        <xsl:call-template name="_IndentInc" />
+        <xsl:apply-templates select="ReturnType/SelectFunctionReturnType/SelectStatement"/>
+        <xsl:call-template name="_IndentDec" />
+        <xsl:call-template name="_LineBreak" />
+        <xsl:text>);</xsl:text>
+        <xsl:call-template name="_IndentDec" />
+        <xsl:call-template name="_IndentDec" />
+        <xsl:call-template name="_LineBreak" /> 
+        <xsl:text>END;</xsl:text>       
+        <xsl:call-template name="_LineBreak" /> 
+      </xsl:when>
+    </xsl:choose>
     <xsl:call-template name="_IndentDec"></xsl:call-template>
     <xsl:call-template name="_LineBreak"></xsl:call-template>
     <xsl:call-template name="_LineBreak"></xsl:call-template>
@@ -89,7 +118,7 @@
     <xsl:apply-templates select="Name/SchemaObjectName/Identifiers" />
     <xsl:text>') where level = 'error') THEN</xsl:text>
     <xsl:call-template name="_LineBreak" />
-    <xsl:text>        select 'function: ' || t.functionid || E'\nline no: ' || t.lineno || E'\nMessage: ' || sqlstate || ': ' || "message" || E'\n' || detail || E'\n' || hint as msg </xsl:text>
+    <xsl:text>        select CONCAT ('function: ' || t.functionid , E'\nline no: ' || t.lineno, E'\nMessage: ' || sqlstate || ': ' || "message",  E'\n' || detail, E'\n' || hint) </xsl:text>
     <xsl:call-template name="_LineBreak" />
     <xsl:text>        into var_message</xsl:text>
     <xsl:call-template name="_LineBreak" />

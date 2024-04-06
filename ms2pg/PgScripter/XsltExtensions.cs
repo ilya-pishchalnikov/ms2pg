@@ -4,11 +4,20 @@ using System.Linq;
 using System.Security.Policy;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Microsoft.Data.SqlClient;
+using Microsoft.SqlServer.TransactSql.ScriptDom;
 
 namespace ms2pg.PgScripter
 {
     public class XsltExtensions
     {
+        private Config.Config _Config;
+
+        public XsltExtensions (Config.Config config)
+        {
+            _Config = config;
+        }
+
         private string[] _Keywords = new string[] {
                 "all",
                 "analyse",
@@ -111,6 +120,57 @@ namespace ms2pg.PgScripter
         public string DoubleQuotes (string str)
         {
             return str.Replace("'", "''");
+        }
+
+        public string GetTableValuedFunctionTableDefinition (string functionName)
+        {
+            var result = string.Empty;
+            var connectionString = _Config["ms-connection-string"];
+            using (var connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                var sql = $"select count (*) from sys.parameters where object_id = object_id('{functionName}')";
+                var parametersCount = 0;
+
+                using (var command = new SqlCommand (sql, connection))
+                {
+                    parametersCount = (int)command.ExecuteScalar();
+                }
+
+                var parameters = string.Empty;
+                for (int i = 0; i < parametersCount; i++)
+                {
+                    if (i > 0) parameters += ", ";
+                    parameters += "default";
+                }
+
+                sql = "select top (0) *\n";
+                sql += $"from {functionName}({parameters});\n";
+
+                using (var command = new SqlCommand (sql, connection))
+                using (var reader  = command.ExecuteReader())
+                {
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        if (i > 0) result += ",\n";
+                        result += QuoteName(reader.GetName(i)) + " ";
+                        var fieldType = reader.GetFieldType(i);
+                        switch (fieldType.Name)
+                        {
+                            case "Int32":
+                                result += "INT";
+                                break;
+                            case "String":
+                                result += "TEXT";
+                                break;
+                            default:
+                                result += fieldType.Name;
+                                break;
+                        }
+                    }
+                }
+            }
+            return result + "\n";
         }
     }
 }

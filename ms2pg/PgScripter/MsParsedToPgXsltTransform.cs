@@ -38,7 +38,7 @@ namespace ms2pg.PgScripter
                     
                     xslt.Load(xsltFileName, xsltSettings, new XmlUrlResolver());
 
-                    var xsltExtensions = new XsltExtensions();
+                    var xsltExtensions = new XsltExtensions(config);
                     xsltArguments.AddExtensionObject("urn:ms2pg", xsltExtensions);
                 }
                 //Execute the XSLT transform.
