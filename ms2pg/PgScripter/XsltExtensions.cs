@@ -125,50 +125,57 @@ namespace ms2pg.PgScripter
         public string GetTableValuedFunctionTableDefinition (string functionName)
         {
             var result = string.Empty;
-            var connectionString = _Config["ms-connection-string"];
-            using (var connection = new SqlConnection(connectionString))
+            try
             {
-                connection.Open();
-                var sql = $"select count (*) from sys.parameters where object_id = object_id('{functionName}')";
-                var parametersCount = 0;
-
-                using (var command = new SqlCommand (sql, connection))
+                var connectionString = _Config["ms-connection-string"];
+                using (var connection = new SqlConnection(connectionString))
                 {
-                    parametersCount = (int)command.ExecuteScalar();
-                }
+                    connection.Open();
+                    var sql = $"select count (*) from sys.parameters where object_id = object_id('{functionName}')";
+                    var parametersCount = 0;
 
-                var parameters = string.Empty;
-                for (int i = 0; i < parametersCount; i++)
-                {
-                    if (i > 0) parameters += ", ";
-                    parameters += "default";
-                }
-
-                sql = "select top (0) *\n";
-                sql += $"from {functionName}({parameters});\n";
-
-                using (var command = new SqlCommand (sql, connection))
-                using (var reader  = command.ExecuteReader())
-                {
-                    for (int i = 0; i < reader.FieldCount; i++)
+                    using (var command = new SqlCommand (sql, connection))
                     {
-                        if (i > 0) result += ",\n";
-                        result += QuoteName(reader.GetName(i)) + " ";
-                        var fieldType = reader.GetFieldType(i);
-                        switch (fieldType.Name)
+                        parametersCount = (int)command.ExecuteScalar();
+                    }
+
+                    var parameters = string.Empty;
+                    for (int i = 0; i < parametersCount; i++)
+                    {
+                        if (i > 0) parameters += ", ";
+                        parameters += "default";
+                    }
+
+                    sql = "select top (0) *\n";
+                    sql += $"from {functionName}({parameters});\n";
+
+                    using (var command = new SqlCommand (sql, connection))
+                    using (var reader  = command.ExecuteReader())
+                    {
+                        for (int i = 0; i < reader.FieldCount; i++)
                         {
-                            case "Int32":
-                                result += "INT";
-                                break;
-                            case "String":
-                                result += "TEXT";
-                                break;
-                            default:
-                                result += fieldType.Name;
-                                break;
+                            if (i > 0) result += ",\n";
+                            result += QuoteName(reader.GetName(i)) + " ";
+                            var fieldType = reader.GetFieldType(i);
+                            switch (fieldType.Name)
+                            {
+                                case "Int32":
+                                    result += "INT";
+                                    break;
+                                case "String":
+                                    result += "TEXT";
+                                    break;
+                                default:
+                                    result += fieldType.Name;
+                                    break;
+                            }
                         }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                result = $"/*!ERROR HERE! Message: {ex.Message}*/";
             }
             return result + "\n";
         }

@@ -470,7 +470,7 @@
         <xsl:if test="position() > 1">
           <xsl:text>, </xsl:text>
         </xsl:if>
-        <xsl:apply-templates select="*"/>
+        <xsl:apply-templates select="."/>
       </xsl:for-each>
       <xsl:text>)</xsl:text>
     </xsl:template>

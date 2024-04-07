@@ -12,7 +12,13 @@
   </xsl:template>
 
   <xsl:template match="BinaryQueryExpression">
+    <xsl:text>(</xsl:text>
+    <xsl:call-template name="_IndentInc" />
+    <xsl:call-template name="_LineBreak" />
     <xsl:apply-templates select="FirstQueryExpression"/>
+    <xsl:text>)</xsl:text>
+    <xsl:call-template name="_IndentDec" />
+    <xsl:call-template name="_LineBreak" />
     <xsl:choose>
       <xsl:when test="@BinaryQueryExpressionType='Union'">
         <xsl:text>UNION</xsl:text>
@@ -25,7 +31,13 @@
       </xsl:when>
     </xsl:choose>
     <xsl:call-template name="_LineBreak" />
+    <xsl:text>(</xsl:text>
+    <xsl:call-template name="_IndentInc" />
+    <xsl:call-template name="_LineBreak" />
     <xsl:apply-templates select="SecondQueryExpression"/>
+    <xsl:text>)</xsl:text>
+    <xsl:call-template name="_IndentDec" />
+    <xsl:call-template name="_LineBreak" />
   </xsl:template>
 
   <!-- Query -->
@@ -36,6 +48,7 @@
     <xsl:apply-templates select="GroupByClause" />
     <xsl:apply-templates select="HavingClause" />
     <xsl:apply-templates select="OrderByClause" />
+    <xsl:apply-templates select="TopRowFilter"/>
   </xsl:template>  
 
   <!-- Select clause -->
@@ -274,6 +287,13 @@
         <xsl:text> AS </xsl:text>
         <xsl:apply-templates select="Alias/Identifier"/>
       </xsl:if>
+    </xsl:template>
+
+    <xsl:template match="TopRowFilter">
+      <xsl:call-template name="_LineBreak" />
+      <xsl:text>LIMIT </xsl:text>
+      <xsl:apply-templates select="Expression"/>
+      <xsl:call-template name="_LineBreak" />
     </xsl:template>
 
 </xsl:stylesheet>
