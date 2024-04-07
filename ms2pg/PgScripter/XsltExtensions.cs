@@ -124,60 +124,83 @@ namespace ms2pg.PgScripter
 
         public string GetTableValuedFunctionTableDefinition (string functionName)
         {
-            var result = string.Empty;
             try
             {
-                var connectionString = _Config["ms-connection-string"];
-                using (var connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    var sql = $"select count (*) from sys.parameters where object_id = object_id('{functionName}')";
-                    var parametersCount = 0;
-
-                    using (var command = new SqlCommand (sql, connection))
-                    {
-                        parametersCount = (int)command.ExecuteScalar();
-                    }
-
-                    var parameters = string.Empty;
-                    for (int i = 0; i < parametersCount; i++)
-                    {
-                        if (i > 0) parameters += ", ";
-                        parameters += "default";
-                    }
-
-                    sql = "select top (0) *\n";
-                    sql += $"from {functionName}({parameters});\n";
-
-                    using (var command = new SqlCommand (sql, connection))
-                    using (var reader  = command.ExecuteReader())
-                    {
-                        for (int i = 0; i < reader.FieldCount; i++)
-                        {
-                            if (i > 0) result += ",\n";
-                            result += QuoteName(reader.GetName(i)) + " ";
-                            var fieldType = reader.GetFieldType(i);
-                            switch (fieldType.Name)
-                            {
-                                case "Int32":
-                                    result += "INT";
-                                    break;
-                                case "String":
-                                    result += "TEXT";
-                                    break;
-                                default:
-                                    result += fieldType.Name;
-                                    break;
-                            }
-                        }
-                    }
-                }
+                var functionFields = GetFunctionFields(functionName);
+                return functionFields.Select(functionField => $"var_{functionField[0]} {functionField[1]}").Aggregate((x, y) => x + ",\n" + y);
             }
             catch (Exception ex)
             {
-                result = $"/*!ERROR HERE! Message: {ex.Message}*/";
+                return $"/*!ERROR HERE! {ex.Message}*/";
             }
-            return result + "\n";
+        }
+
+        public string GetTableValuedFunctionQueryFieldsDefinition (string functionName)
+        {
+            try
+            {
+                var functionFields = GetFunctionFields(functionName);
+                return functionFields.Select(functionField => $"CAST ({functionField[0]} AS {functionField[1]})").Aggregate((x, y) => x + ",\n" + y);
+            }
+            catch (Exception ex)
+            {
+                return $"/*!ERROR HERE! {ex.Message}*/";
+            }
+        }       
+
+        private List<List<string>> GetFunctionFields (string functionName)
+        {
+            var result = new List<List<string>>();
+            var connectionString = _Config["ms-connection-string"];
+            using (var connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                var sql = $"select count (*) from sys.parameters where object_id = object_id('{functionName}')";
+                var parametersCount = 0;
+
+                using (var command = new SqlCommand (sql, connection))
+                {
+                    parametersCount = (int)command.ExecuteScalar();
+                }
+
+                var parameters = string.Empty;
+                for (int i = 0; i < parametersCount; i++)
+                {
+                    if (i > 0) parameters += ", ";
+                    parameters += "default";
+                }
+
+                sql = "select top (0) *\n";
+                sql += $"from {functionName}({parameters});\n";
+
+                using (var command = new SqlCommand (sql, connection))
+                using (var reader  = command.ExecuteReader())
+                {
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        var fieldDefinition = new List<string>(2);
+                        fieldDefinition.Add (QuoteName(reader.GetName(i)));
+                        var fieldType = reader.GetFieldType(i);
+                        switch (fieldType.Name)
+                        {
+                            case "Int32":
+                                fieldDefinition.Add ("INT");
+                                break;
+                            case "Int64":
+                                fieldDefinition.Add ("BIGINT");
+                                break;
+                            case "String":
+                                fieldDefinition.Add ("TEXT");
+                                break;
+                            default:
+                                fieldDefinition.Add (fieldType.Name);
+                                break;
+                        }
+                        result.Add(fieldDefinition);
+                    }
+                }
+            }
+            return result;
         }
     }
 }

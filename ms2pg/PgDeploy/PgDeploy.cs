@@ -104,7 +104,7 @@ namespace ms2pg.PgDeploy
                             }
                             catch (PostgresException ex)
                             {
-                                var solveResult = ErrorsSolver.Solve(ex, fileBatches, i, file);
+                                var solveResult = ErrorsSolver.Solve(ex, fileBatches, i, file, config);
                                 switch (solveResult)
                                 {
                                     case ErrorsSolver.SolveResult.Solved:
@@ -174,9 +174,6 @@ namespace ms2pg.PgDeploy
                             }
                             File.WriteAllText("errors.sql",errorsString + batches.Aggregate( (x, y) => x + "\n\n/*GO*/\n\n" + y));
                              throw new ApplicationException($"Error count exceeds limit. Undeployed batches ({batches.Count}) saved to errors.sql");
-                        }
-                        if (ErrorCount > batches.Count * batches.Count){
-                            ErrorCount = batches.Count * batches.Count;
                         }
                     }
                 }

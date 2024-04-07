@@ -5,8 +5,10 @@
   <!-- Create procedure statement -->
   <xsl:template match="CreateFunctionStatement|CreateOrAlterFunctionStatement">
     <xsl:text>CREATE OR REPLACE FUNCTION </xsl:text>
+    <xsl:variable name="function_name">
+      <xsl:apply-templates select="Name/SchemaObjectName/Identifiers" />
+    </xsl:variable>
     <xsl:apply-templates select="Name/SchemaObjectName/Identifiers" />
-
     <xsl:text>(</xsl:text>
     <xsl:call-template name="_IndentInc"></xsl:call-template>
     <xsl:call-template name="_IndentInc"></xsl:call-template>
@@ -39,9 +41,6 @@
       </xsl:when>
       <xsl:when test="ReturnType/SelectFunctionReturnType">
         <xsl:text>TABLE (</xsl:text>
-        <xsl:variable name="function_name">
-          <xsl:apply-templates select="Name/SchemaObjectName/Identifiers" />
-        </xsl:variable>
         <xsl:value-of select="ms2pg:GetTableValuedFunctionTableDefinition($function_name)" />
         <xsl:text>)</xsl:text>
       </xsl:when>
@@ -89,10 +88,20 @@
         <xsl:call-template name="_LineBreak" />
         <xsl:text>RETURN QUERY (</xsl:text>
         <xsl:call-template name="_IndentInc" />
+        <xsl:call-template name="_LineBreak" />
+        <xsl:text>SELECT</xsl:text>
+        <xsl:call-template name="_IndentInc" />
+        <xsl:call-template name="_LineBreak" />
+        <xsl:value-of select="ms2pg:GetTableValuedFunctionQueryFieldsDefinition($function_name)"/>        
+        <xsl:call-template name="_IndentDec" />
+        <xsl:call-template name="_LineBreak" />
+        <xsl:text>FROM (</xsl:text>
+        <xsl:call-template name="_IndentInc" />
         <xsl:call-template name="_IndentInc" />
         <xsl:apply-templates select="ReturnType/SelectFunctionReturnType/SelectStatement"/>
         <xsl:call-template name="_IndentDec" />
         <xsl:call-template name="_LineBreak" />
+        <xsl:text>) t</xsl:text>
         <xsl:text>);</xsl:text>
         <xsl:call-template name="_IndentDec" />
         <xsl:call-template name="_IndentDec" />
@@ -103,8 +112,9 @@
     </xsl:choose>
     <xsl:call-template name="_IndentDec"></xsl:call-template>
     <xsl:call-template name="_LineBreak"></xsl:call-template>
-    <xsl:call-template name="_LineBreak"></xsl:call-template>
     <xsl:text>$$;</xsl:text>
+    <xsl:call-template name="_LineBreak" />
+    <xsl:text>COMMIT;</xsl:text>
     <xsl:call-template name="_LineBreak" />
     <xsl:text>Do LANGUAGE plpgsql $$</xsl:text>
     <xsl:call-template name="_LineBreak" />
@@ -117,8 +127,10 @@
     <xsl:text>    if exists (select * from public.plpgsql_check_function_tb('</xsl:text>
     <xsl:apply-templates select="Name/SchemaObjectName/Identifiers" />
     <xsl:text>') where level = 'error') THEN</xsl:text>
-    <xsl:call-template name="_LineBreak" />
-    <xsl:text>        select CONCAT ('function: ' || t.functionid , E'\nline no: ' || t.lineno, E'\nMessage: ' || sqlstate || ': ' || "message",  E'\n' || detail, E'\n' || hint) </xsl:text>
+    <xsl:call-template name="_LineBreak" />    
+    <xsl:text>        select CONCAT ('{{CHECK ERROR}}', 'function: [[</xsl:text>
+    <xsl:apply-templates select="Name/SchemaObjectName/Identifiers" />
+    <xsl:text>]]', E'\nline no: ' || t.lineno, E'\nMessage: ' || sqlstate || ': ' || "message",  E'\n' || detail, E'\n' || hint) </xsl:text>
     <xsl:call-template name="_LineBreak" />
     <xsl:text>        into var_message</xsl:text>
     <xsl:call-template name="_LineBreak" />
