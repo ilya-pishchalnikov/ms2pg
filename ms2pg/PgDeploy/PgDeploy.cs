@@ -134,6 +134,8 @@ namespace ms2pg.PgDeploy
                     }
                 }
 
+                var listOfErrorsHash = 0;
+                var hashSameCount = 0;
 
                 while (batches.Count > 0)
                 {
@@ -147,6 +149,21 @@ namespace ms2pg.PgDeploy
                     {
                         ErrorCount--;
                         batches.Enqueue(batch);
+                        var currentHash = GetOrderIndependentHashCode(batches);
+
+                        if (currentHash == listOfErrorsHash)
+                        {
+                            hashSameCount++;
+                            if (hashSameCount > batches.Count())
+                            {
+                                ErrorCount = 0;
+                            }
+                        }
+                        else{
+                            listOfErrorsHash = currentHash;
+                            hashSameCount = 0;
+                        }
+
                         Console.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}\terror while deploying batch\nERROR: {ex.Message}");
                         if (ErrorCount <= 0)
                         {
@@ -184,6 +201,16 @@ namespace ms2pg.PgDeploy
                 command.CommandText = batch;
                 command.ExecuteNonQuery();
             }
+        }
+
+        private static int GetOrderIndependentHashCode<T>(IEnumerable<T> source)
+        {
+            int hash = 0;
+            foreach (T element in source)
+            {
+                hash = hash ^ EqualityComparer<T>.Default.GetHashCode(element);
+            }
+            return hash;
         }
     }
 }
