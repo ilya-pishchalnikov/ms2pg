@@ -116,6 +116,14 @@
     <xsl:call-template name="_LineBreak" />
     <xsl:text>COMMIT;</xsl:text>
     <xsl:call-template name="_LineBreak" />
+    <xsl:text>-- Temp tables create {{</xsl:text>
+    <xsl:call-template name="_LineBreak" />
+    <xsl:for-each select="//DeclareTableVariableStatement">
+      <xsl:apply-templates select="."/>
+      <xsl:call-template name="_EndOfStatement" />
+    </xsl:for-each>
+    <xsl:text>-- }} Temp tables create</xsl:text>
+    <xsl:call-template name="_LineBreak" />
     <xsl:text>Do LANGUAGE plpgsql $$</xsl:text>
     <xsl:call-template name="_LineBreak" />
     <xsl:text>declare </xsl:text>

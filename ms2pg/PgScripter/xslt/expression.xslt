@@ -408,6 +408,9 @@
   </xsl:template>
 
   <xsl:template match="VariableReference">
+    <xsl:if test="ancestor::VariableTableReference">
+      <xsl:text>tmp_</xsl:text>
+    </xsl:if>
     <xsl:text>var</xsl:text>
     <xsl:value-of select="translate(@Name,'@', '_')" />
   </xsl:template>

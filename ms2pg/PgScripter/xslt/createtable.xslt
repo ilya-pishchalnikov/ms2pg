@@ -69,6 +69,9 @@
         <xsl:when test="local-name() = 'NullableConstraintDefinition'">
           <xsl:apply-templates select="." />
         </xsl:when>
+        <xsl:when test="local-name() = 'UniqueConstraintDefinition'">
+          <xsl:apply-templates select="." />
+        </xsl:when>
         <xsl:otherwise>
           <xsl:text>/*Not recognized constraint type:  "</xsl:text>
           <xsl:value-of select="local-name()"/>
@@ -76,7 +79,6 @@
         </xsl:otherwise>
       </xsl:choose>
     </xsl:for-each>
-    
   </xsl:template>
 
 

@@ -92,9 +92,11 @@
         <xsl:text>UNIQUE </xsl:text>
       </xsl:otherwise>
     </xsl:choose>
+    <xsl:if test="Columns/node()">
     <xsl:text>(</xsl:text>
     <xsl:apply-templates select="Columns" />
-    <xsl:text>)</xsl:text>
+    <xsl:text>)</xsl:text>      
+    </xsl:if>
     <xsl:call-template name="_LineBreak" />
   </xsl:template>
 

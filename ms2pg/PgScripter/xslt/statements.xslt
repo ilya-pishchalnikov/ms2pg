@@ -132,6 +132,10 @@
           <xsl:apply-templates select = "." />
           <xsl:call-template name="_EndOfStatement" />
         </xsl:when>
+        <xsl:when test="local-name() = 'DeclareTableVariableStatement'">
+          <xsl:apply-templates select = "." />
+          <xsl:call-template name="_EndOfStatement" />
+        </xsl:when>
         <xsl:otherwise>
           <xsl:call-template name ="_UnknownToken" />
           <xsl:call-template name="_LineBreak" />
@@ -205,6 +209,9 @@
   <xsl:template match="UpdateSpecification">
     <xsl:text>UPDATE </xsl:text>
     <xsl:apply-templates select="Target/NamedTableReference/SchemaObject/SchemaObjectName/Identifiers" />
+    <xsl:if test="Target/VariableTableReference/Variable/VariableReference">
+      <xsl:apply-templates select="Target/VariableTableReference/Variable/VariableReference"/>
+    </xsl:if>
     <xsl:call-template name="_LineBreak" />
     <xsl:text>SET </xsl:text>
     <xsl:call-template name="_IndentInc" />
@@ -277,7 +284,7 @@
         <xsl:call-template name="_LineBreak" />
         <xsl:text>SELECT * </xsl:text>
         <xsl:call-template name="_LineBreak" />
-        <xsl:text>FROM tmp_</xsl:text>
+        <xsl:text>FROM </xsl:text>
         <xsl:apply-templates select="Variable"/>
         <xsl:value-of select="CreateFunctionStatement/ReturnType/TableValuedFunctionReturnType/DeclareTableVariableBody"/>
         <xsl:apply-templates select="ancestor::CreateFunctionStatement/ReturnType/TableValuedFunctionReturnType/DeclareTableVariableBody/VariableName"/>        
@@ -331,7 +338,7 @@
   </xsl:template>
 
   <xsl:template match="DeclareTableVariableBody">
-    <xsl:text>CREATE TEMP TABLE IF NOT EXISTS tmp_</xsl:text>
+    <xsl:text>CREATE TEMP TABLE IF NOT EXISTS </xsl:text>
     <xsl:apply-templates select="VariableName"/>
     <xsl:apply-templates select="Definition/TableDefinition"/>
   </xsl:template>
@@ -342,9 +349,6 @@
     </xsl:if>
     
     <xsl:text>INSERT INTO </xsl:text>
-    <xsl:if test="InsertSpecification/Target/VariableTableReference">
-      <xsl:text>tmp_</xsl:text>
-    </xsl:if>
     <xsl:apply-templates select="InsertSpecification/Target/VariableTableReference"/>
     <xsl:text>(</xsl:text>
     <xsl:call-template name="_IndentInc" />
@@ -495,6 +499,13 @@
   <xsl:template match="CreateSchemaStatement">
     <xsl:text>CREATE SCHEMA IF NOT EXISTS </xsl:text>
     <xsl:apply-templates select="Name/Identifier"/>
+  </xsl:template>
+
+  <xsl:template match="DeclareTableVariableStatement">
+    <xsl:text>CREATE TEMP TABLE tmp_var_</xsl:text>
+    <xsl:value-of select="substring(Body/DeclareTableVariableBody/VariableName/Identifier/@Value, 2, string-length (Body/DeclareTableVariableBody/VariableName/Identifier/@Value) - 1)"/>
+    <xsl:call-template name="_LineBreak" />
+    <xsl:apply-templates select="Body/DeclareTableVariableBody/Definition/TableDefinition"/>
   </xsl:template>
 
 </xsl:stylesheet>

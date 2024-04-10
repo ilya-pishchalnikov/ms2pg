@@ -31,10 +31,11 @@ namespace ms2pg.PgDeploy
             {
                 var connectionString = config["pg-connection-string"];
                 var functionName = Regex.Match(errorMessage, @"\[\[.+\]\]").Value.Replace("[", "").Replace("]", "");
+                var tempTablesCreateStatement = Regex.Match(batch, @"-- Temp tables create \{\{([\r\n]|.)+-- \}\} Temp tables create").Value;
                 using (var connection = new NpgsqlConnection(connectionString))
                 {
                     connection.Open();
-                    var sql = $"select sqlstate, position, query, message from public.plpgsql_check_function_tb('{functionName}') t where level = 'error'";
+                    var sql = tempTablesCreateStatement + $"\nselect sqlstate, position, query, message from public.plpgsql_check_function_tb('{functionName}') t where level = 'error'";
                     using(var command = new NpgsqlCommand(sql, connection))
                     using(var reader = command.ExecuteReader())
                     {
