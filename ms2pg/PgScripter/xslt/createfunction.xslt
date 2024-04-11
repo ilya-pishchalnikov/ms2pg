@@ -53,6 +53,8 @@
     <xsl:call-template name="_LineBreak"></xsl:call-template>
     <xsl:text>AS $$</xsl:text>
     <xsl:call-template name="_LineBreak"></xsl:call-template>
+    <xsl:text>#variable_conflict use_column</xsl:text>
+    <xsl:call-template name="_LineBreak" />
     <xsl:if test="//DeclareVariableElement|//DeclareCursorStatement">
       <xsl:call-template name="_LineBreak" />
       <xsl:call-template name="_IndentInc" />
@@ -118,7 +120,7 @@
     <xsl:call-template name="_LineBreak" />
     <xsl:text>-- Temp tables create {{</xsl:text>
     <xsl:call-template name="_LineBreak" />
-    <xsl:for-each select="//DeclareTableVariableStatement">
+    <xsl:for-each select="//DeclareTableVariableStatement|//DeclareTableVariableBody">
       <xsl:apply-templates select="."/>
       <xsl:call-template name="_EndOfStatement" />
     </xsl:for-each>

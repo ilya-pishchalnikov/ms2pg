@@ -49,7 +49,7 @@ namespace ms2pg.PgDeploy
                             int queryPosition = 0;
                             if (query != null )
                             {
-                                queryPosition = batch.IndexOf(query);
+                                queryPosition = IndexOfWithSpaces(batch, query);
                             }
                             if (reader[1] != null && reader[1].GetType() != typeof (DBNull))
                             {
@@ -92,7 +92,7 @@ namespace ms2pg.PgDeploy
                                                  + afterErrorBatchPart;
                         }
                     }
-                    else if (Regex.IsMatch(errorMessage!, @"timestamp with time zone [+\-] integer"))
+                    else if (Regex.IsMatch(errorMessage!, @"timestamp with(out)? time zone [+\-] integer"))
                     {
                         beforeErrorBatchPart = batch.Substring(0, errorPosition);
                         afterErrorBatchPart = batch.Substring(errorPosition);
@@ -148,6 +148,17 @@ namespace ms2pg.PgDeploy
                         if (match.Success)
                         {
                             fixedBatch = beforeErrorBatchPart + "CAST (" + match.Value + " AS VARCHAR) "
+                                        + afterErrorBatchPart.Substring(match.Length);
+                        }
+                    }
+                    else if (Regex.IsMatch(errorMessage!, "timestamp with(out)? time zone .+ character varying"))
+                    {
+                        beforeErrorBatchPart = batch.Substring(0, errorPosition - 1);
+                        afterErrorBatchPart = batch.Substring(errorPosition - 1);
+                        var match = Regex.Match(afterErrorBatchPart, @"^[ \t\r\n]*(\d+|[0-9a-zA-Z_#]+([ \t\r\n]*\.+[ \t\r\n]*[0-9a-zA-Z_#]+)*)");
+                        if (match.Success)
+                        {
+                            fixedBatch = beforeErrorBatchPart + "CAST (" + match.Value + " AS TIMESTAMP) "
                                         + afterErrorBatchPart.Substring(match.Length);
                         }
                     }
@@ -208,6 +219,28 @@ namespace ms2pg.PgDeploy
                 File.WriteAllText(fileName, batches.Aggregate((x, y) => x + "\n{{GO}}\n" + y));
                 return solveResult;
             }
+
+        }
+
+        private static int IndexOfWithSpaces (string containingString, string contentString)
+        {
+            for (int shift = 0; shift < containingString.Length - contentString.Length; shift++) 
+            {
+                var isMatch = true;
+                for (int i = 0;  i < contentString.Length; i++) 
+                {
+                    if (containingString[shift + i] != contentString[i] && contentString[i] != ' ')
+                    {
+                        isMatch = false;
+                        break;
+                    }
+                }
+                if (isMatch)
+                {
+                    return shift;
+                }
+            }
+            return -1;
         }
     }
 }

@@ -142,7 +142,7 @@
   <xsl:template match="FunctionCall">
     <xsl:variable name="function_name" select="ms2pg:ToLower(FunctionName/Identifier/@Value)"/>
     <xsl:choose>
-      <xsl:when test="$function_name='day' or $function_name='year' or $function_name = 'month'">
+      <xsl:when test="$function_name='day' or $function_name='year' or $function_name = 'month' ">
         <xsl:text>EXTRACT (</xsl:text>
         <xsl:value-of select="$function_name"/>
         <xsl:text> FROM </xsl:text>
@@ -151,9 +151,9 @@
       </xsl:when>
       <xsl:when test="$function_name='datepart'">
         <xsl:text>EXTRACT (</xsl:text>
-        <xsl:apply-templates select="Parameters/ColumnReferenceExpression[1]/MultiPartIdentifier/Identifiers"/>
+        <xsl:apply-templates select="Parameters/*[1]"/>
         <xsl:text> FROM </xsl:text>
-        <xsl:apply-templates select="Parameters/ColumnReferenceExpression[2]/MultiPartIdentifier/Identifiers"/>
+        <xsl:apply-templates select="Parameters/*[2]"/>
         <xsl:text>)</xsl:text>
       </xsl:when>
       <xsl:when test="$function_name='dateadd'">
@@ -189,6 +189,13 @@
             <xsl:apply-templates select="Parameters/*[2]"/>
           </xsl:otherwise>
         </xsl:choose>
+        <xsl:text>)</xsl:text>
+      </xsl:when>
+      <xsl:when test="$function_name='round'">
+        <xsl:text>ROUND(CAST(</xsl:text>
+        <xsl:apply-templates select="Parameters/*[1]"/>
+        <xsl:text> AS NUMERIC), </xsl:text>
+        <xsl:apply-templates select="Parameters/*[2]"/>
         <xsl:text>)</xsl:text>
       </xsl:when>
     <xsl:otherwise>      
@@ -398,6 +405,9 @@
   
   <!-- Variable name -->
   <xsl:template match="VariableName">
+    <xsl:if test="ancestor::DeclareTableVariableBody">
+      <xsl:text>tmp_</xsl:text>
+    </xsl:if>
     <xsl:text>var</xsl:text>
     <xsl:value-of select="ms2pg:QuoteName(translate(Identifier/@Value,'@', '_'))" />
   </xsl:template> 
@@ -438,9 +448,13 @@
   
   <xsl:template match="VariableTableReference">
     <xsl:apply-templates select="Variable"/>
-    <xsl:if test="not (@Alias='')">
+    <xsl:if test="@Alias != ''">
       <xsl:text> AS </xsl:text>
       <xsl:value-of select="ms2pg:QuoteName(@Alias)"/>
+    </xsl:if>
+    <xsl:if test="Alias">
+      <xsl:text> AS </xsl:text>
+      <xsl:apply-templates select="Alias/Identifier"/>
     </xsl:if>
   </xsl:template>
 

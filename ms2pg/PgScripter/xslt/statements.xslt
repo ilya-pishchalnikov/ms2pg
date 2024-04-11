@@ -350,25 +350,27 @@
     
     <xsl:text>INSERT INTO </xsl:text>
     <xsl:apply-templates select="InsertSpecification/Target/VariableTableReference"/>
-    <xsl:text>(</xsl:text>
-    <xsl:call-template name="_IndentInc" />
-    <xsl:call-template name="_IndentInc" />
-    <xsl:call-template name="_LineBreak" />
-    <xsl:for-each select="InsertSpecification/Columns/ColumnReferenceExpression">    
-      <xsl:if test="position()>1">
-        <xsl:text>, </xsl:text>
-        <xsl:call-template name="_LineBreak" />
-      </xsl:if>
-      <xsl:apply-templates select="MultiPartIdentifier"/>
-    </xsl:for-each>
-    <xsl:call-template name="_IndentDec" />
-    <xsl:call-template name="_LineBreak" />
-    <xsl:text>)</xsl:text>
+    <xsl:if test="InsertSpecification/Columns/ColumnReferenceExpression">
+      <xsl:text>(</xsl:text>
+      <xsl:call-template name="_IndentInc" />
+      <xsl:call-template name="_IndentInc" />
+      <xsl:call-template name="_LineBreak" />
+      <xsl:for-each select="InsertSpecification/Columns/ColumnReferenceExpression">    
+        <xsl:if test="position()>1">
+          <xsl:text>, </xsl:text>
+          <xsl:call-template name="_LineBreak" />
+        </xsl:if>
+        <xsl:apply-templates select="MultiPartIdentifier"/>
+      </xsl:for-each>
+      <xsl:call-template name="_IndentDec" />
+      <xsl:call-template name="_LineBreak" />
+      <xsl:text>)</xsl:text>      
+    </xsl:if>
     <xsl:call-template name="_IndentDec" />
     <xsl:call-template name="_LineBreak" />
     <xsl:choose>
-      <xsl:when test="InsertSpecification/InsertSource/SelectInsertSource/Select/QuerySpecification">
-        <xsl:apply-templates select="InsertSpecification/InsertSource/SelectInsertSource/Select/QuerySpecification"/>
+      <xsl:when test="InsertSpecification/InsertSource/SelectInsertSource/Select">
+        <xsl:apply-templates select="InsertSpecification/InsertSource/SelectInsertSource/Select"/>
       </xsl:when>
       <xsl:when test="InsertSpecification/InsertSource/ValuesInsertSource">
         <xsl:text>VALUES (</xsl:text>

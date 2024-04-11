@@ -81,9 +81,7 @@
         <xsl:text> AS </xsl:text>
         <xsl:apply-templates select="ColumnName/IdentifierOrValueExpression/Identifier" />
         <xsl:if test="ColumnName/IdentifierOrValueExpression/ValueExpression/StringLiteral">
-          <xsl:text>"</xsl:text>
-          <xsl:value-of select="ColumnName/IdentifierOrValueExpression/ValueExpression/StringLiteral/@Value"/>
-          <xsl:text>"</xsl:text>
+          <xsl:value-of select="ms2pg:QuoteName(ColumnName/IdentifierOrValueExpression/ValueExpression/StringLiteral/@Value)"/>
         </xsl:if>
       </xsl:if>
     </xsl:for-each>
@@ -161,7 +159,7 @@
     </xsl:template>
 
     <xsl:template match="TableReference|FirstTableReference|SecondTableReference">
-      <xsl:apply-templates select="NamedTableReference|QualifiedJoin|UnqualifiedJoin|QueryDerivedTable|SchemaObjectFunctionTableReference"/>
+      <xsl:apply-templates select="NamedTableReference|QualifiedJoin|UnqualifiedJoin|QueryDerivedTable|SchemaObjectFunctionTableReference|VariableTableReference"/>
     </xsl:template>
 
     <xsl:template match="QueryDerivedTable">
@@ -294,6 +292,10 @@
       <xsl:text>LIMIT </xsl:text>
       <xsl:apply-templates select="Expression"/>
       <xsl:call-template name="_LineBreak" />
+    </xsl:template>
+
+    <xsl:template match="Select">
+      <xsl:apply-templates select="BinaryQueryExpression|QuerySpecification"/>
     </xsl:template>
 
 </xsl:stylesheet>
