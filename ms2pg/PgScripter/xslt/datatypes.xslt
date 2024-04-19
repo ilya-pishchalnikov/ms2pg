@@ -9,7 +9,7 @@
   <!-- Data type -->
   <xsl:template match="SqlDataTypeReference|XmlDataTypeReference|UserDataTypeReference">
     <xsl:variable name="datatype">
-      <xsl:apply-templates select="Name/SchemaObjectName" />
+      <xsl:apply-templates select="Name/SchemaObjectName/Identifiers/Identifier/@Value" />
     </xsl:variable>
     <xsl:variable name="pgType">
       <xsl:choose>
