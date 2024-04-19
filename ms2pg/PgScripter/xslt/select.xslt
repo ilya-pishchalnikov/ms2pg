@@ -403,6 +403,9 @@
 
     <xsl:template match="WithCtesAndXmlNamespaces">
       <xsl:text>WITH </xsl:text>
+      <xsl:if test="//TableReferences/NamedTableReference/SchemaObject/SchemaObjectName/Identifiers/Identifier[@Value = ancestor::CommonTableExpressions/CommonTableExpression/ExpressionName/Identifier/@Value]">
+        <xsl:text>RECURSIVE </xsl:text>
+      </xsl:if>
       <xsl:call-template name="_IndentInc" />
       <xsl:for-each select="CommonTableExpressions/CommonTableExpression">
         <xsl:if test="position()>1">

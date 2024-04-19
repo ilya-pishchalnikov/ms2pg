@@ -157,6 +157,7 @@ namespace ms2pg.PgScripter
                 "both",
                 "case",
                 "cast",
+                "char",
                 "check",
                 "collate",
                 "column",

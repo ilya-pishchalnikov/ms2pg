@@ -13,5 +13,5 @@
   <property name="deploy-retry-count"                  value="100000"/>
   <property name="empty-ms-folder-exclude"             value=""/>
   <property name="empty-pg-folder-exclude"             value="\.pre\"/>
-  <property name="file-name-contains-filters"          value="" />
+  <property name="file-name-contains-filters"          value=".fChars2Table." />
 </ms2pg-config>

@@ -63,7 +63,9 @@
       <xsl:otherwise>
         <xsl:apply-templates select="DataType"/>
         <xsl:text> </xsl:text>
-        <xsl:apply-templates select="Constraints"/>        
+        <xsl:if test="not (ancestor::TableValuedFunctionReturnType)">
+          <xsl:apply-templates select="Constraints"/>          
+        </xsl:if>  
       </xsl:otherwise>
     </xsl:choose>
     <xsl:text> </xsl:text>
