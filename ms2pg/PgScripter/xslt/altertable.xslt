@@ -64,6 +64,17 @@
             </xsl:if>
           </xsl:if>
           <xsl:apply-templates select="." />
+        </xsl:when>
+        <xsl:when test="local-name() = 'CheckConstraintDefinition'">
+          <xsl:if test="ancestor::AlterTableAddTableElementStatement">
+            <xsl:text>ADD </xsl:text>
+            <xsl:if test="ConstraintIdentifier/Identifier">
+              <xsl:text>CONSTRAINT </xsl:text>
+              <xsl:apply-templates select="ConstraintIdentifier/Identifier"/>
+              <xsl:text> </xsl:text>
+            </xsl:if>
+          </xsl:if>
+          <xsl:apply-templates select="." />
         </xsl:when>     
         <!-- TODO: Other constraints definitions -->
         <xsl:otherwise>
@@ -125,6 +136,11 @@
       <xsl:text>CONSTRAINT </xsl:text>
       <xsl:apply-templates select="Identifier"/>  
       <xsl:text> </xsl:text>     
+    </xsl:template>
+
+    <xsl:template match="CheckConstraintDefinition">
+      <xsl:text>CHECK </xsl:text>
+      <xsl:apply-templates select="CheckCondition/*"/>
     </xsl:template>
 
 </xsl:stylesheet>

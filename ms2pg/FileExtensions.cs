@@ -9,10 +9,13 @@ namespace ms2pg
     {
         public static void EmptyFolder (string folderPath, List<string> foldersToExclude)
         {
-            Directory.GetFiles(folderPath, "*.*", SearchOption.AllDirectories)
-                .Select(x => x.Replace("/", "\\"))
-                .Where (x => foldersToExclude.Where(y => y.Contains(x)).Count() == 0)
-                .ToList().ForEach(x => File.Delete(x));
+            if (Path.Exists(folderPath)) 
+            {
+                Directory.GetFiles(folderPath, "*.*", SearchOption.AllDirectories)
+                    .Select(x => x.Replace("/", "\\"))
+                    .Where (x => foldersToExclude.Where(y => y.Contains(x)).Count() == 0)
+                    .ToList().ForEach(x => File.Delete(x));
+            }
         }
     }
 }

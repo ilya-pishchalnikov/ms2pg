@@ -28,7 +28,7 @@ namespace ms2pg
             stopWatch.Reset();
 
             stopWatch.Start();            
-            // ObjectsParser.ParseFiles(config);
+              //ObjectsParser.ParseFiles(config);
             stopWatch.Stop();
             var parseMsSqlDuration = stopWatch.ElapsedMilliseconds;
             stopWatch.Reset();

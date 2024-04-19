@@ -57,6 +57,7 @@ namespace ms2pg.PgDeploy
             var baseDirectory = config["pg-script-dir"];
             var scriptDirSequence = config["pg-deploy-dir-sequence"].Split(",");
             var files = new List<string>();
+            var totalBatchesCounter = 0;
             foreach (var scriptDir in scriptDirSequence)
             {
                 var dirFilesList = getFileNamesRecursively(Path.Combine(baseDirectory, scriptDir));
@@ -96,6 +97,7 @@ namespace ms2pg.PgDeploy
                         Console.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}\texecuting sql\t{file} => PostgreSQL");
                         var script = File.ReadAllText(file);
                         string[] fileBatches = script.Split("{{GO}}");
+                        totalBatchesCounter += fileBatches.Length;
                         for(int i = 0; i < fileBatches.Length; i++)
                         {
                             try
@@ -173,7 +175,7 @@ namespace ms2pg.PgDeploy
                                 errorsString = errors.Aggregate( (x, y) => x + "\n\n/*GO*/\n\n" + y) + "\n\n/*GO*/\n\n";
                             }
                             File.WriteAllText("errors.sql",errorsString + batches.Aggregate( (x, y) => x + "\n\n/*GO*/\n\n" + y));
-                             throw new ApplicationException($"Error count exceeds limit. Undeployed batches ({batches.Count}) saved to errors.sql");
+                             throw new ApplicationException($"Error count exceeds limit. Undeployed batches ({batches.Count}/{totalBatchesCounter}) saved to errors.sql");
                         }
                     }
                 }
@@ -181,9 +183,11 @@ namespace ms2pg.PgDeploy
                 if (errors.Count > 0)
                 {                            
                     File.WriteAllText("errors.sql", errors.Aggregate( (x, y) => x + "\n\n/*GO*/\n\n" + y) + "\n\n/*GO*/\n\n" );
-                    throw new ApplicationException($"Error count exceeds limit. Undeployed batches ({unsolvableCount}) saved to errors.sql");
+                    throw new ApplicationException($"Error count exceeds limit. Undeployed batches ({unsolvableCount}/{totalBatchesCounter}) saved to errors.sql");
                 }
             }
+
+            Console.WriteLine($"TOTAL BATCHES: {totalBatchesCounter}");
         }
 
 

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 xmlns:msxsl="urn:schemas-microsoft-com:xslt" exclude-result-prefixes="msxsl"
-                xmlns:ms2pg="urn:ms2pg"  
+                xmlns:ms2pg="urn:ms2pg"
   >
   <!-- Object Identifier dbo_ObjectName -->
   <xsl:template match="SchemaObjectName">
@@ -91,10 +91,19 @@
       <xsl:when test="@BinaryExpressionType='Modulo'">
         <xsl:text> % </xsl:text>
       </xsl:when>
+      <xsl:when test="@BinaryExpressionType='BitwiseAnd'">
+        <xsl:text> &amp; </xsl:text>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:text>!UNKNOWN! Binary Expression type</xsl:text>
+      </xsl:otherwise>
     </xsl:choose>
     <xsl:apply-templates select="SecondExpression"/>
   </xsl:template>
 
+  <xsl:template match="BinaryLiteral">
+    <xsl:value-of select="@Value"/>
+  </xsl:template>
 
   <xsl:template match="ParenthesisExpression">
     <xsl:text>(</xsl:text>
@@ -173,6 +182,28 @@
         <xsl:apply-templates select="Parameters/*[3]"/>
         <xsl:text>)</xsl:text>
       </xsl:when>
+      <xsl:when test="$function_name='object_id'">
+        <xsl:text>to_regclass(</xsl:text>
+        <xsl:variable name="object_name">        
+          <xsl:apply-templates select="Parameters/*[1]"/>
+        </xsl:variable>
+        <xsl:value-of select="ms2pg:Replace(ms2pg:Replace(ms2pg:Replace($object_name, 'tempdb..', ''), 'tempdb.dbo.', ''), '#', 'tmp_')"/>
+        <xsl:text>)</xsl:text>
+      </xsl:when>
+      <xsl:when test="$function_name='serverproperty'">
+        <xsl:choose>
+          <xsl:when test="ms2pg:ToLower(Parameters/StringLiteral/@Value) = 'servername'">
+            <xsl:text>CAST(inet_server_addr() AS VARCHAR)</xsl:text>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:text>!UNKNOWN! Server Property</xsl:text>
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:when>
+      <xsl:when test="$function_name='original_login'">
+        <xsl:text>current_user</xsl:text>
+      </xsl:when>
+
       <xsl:when test="$function_name='charindex'">
         <xsl:text>strpos (</xsl:text>
         <xsl:apply-templates select="Parameters/*[1]"/>
@@ -399,17 +430,27 @@
   
   <!-- Identifier -->
   <xsl:template match="Identifier">
-    <xsl:value-of select="ms2pg:QuoteName(@Value)"></xsl:value-of>
+    <xsl:choose>
+      <xsl:when test="@Value='' and ancestor::SchemaObjectName/SchemaIdentifier/Identifier=''">
+        <xsl:text>dbo</xsl:text>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:value-of select="ms2pg:QuoteName(@Value)"></xsl:value-of>
+      </xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
   
   
   <!-- Variable name -->
   <xsl:template match="VariableName">
-    <xsl:if test="ancestor::DeclareTableVariableBody">
-      <xsl:text>tmp_</xsl:text>
-    </xsl:if>
-    <xsl:text>var</xsl:text>
-    <xsl:value-of select="ms2pg:QuoteName(translate(Identifier/@Value,'@', '_'))" />
+    <xsl:variable name="variable_name">
+      <xsl:if test="ancestor::DeclareTableVariableBody">
+        <xsl:text>tmp_</xsl:text>
+      </xsl:if>
+      <xsl:text>var</xsl:text>
+      <xsl:value-of select="translate(Identifier/@Value,'@', '_')" />
+    </xsl:variable>
+    <xsl:value-of select="ms2pg:QuoteName($variable_name)"/>
   </xsl:template> 
   
   <!-- Variable name -->
@@ -418,11 +459,14 @@
   </xsl:template>
 
   <xsl:template match="VariableReference">
-    <xsl:if test="ancestor::VariableTableReference">
-      <xsl:text>tmp_</xsl:text>
-    </xsl:if>
-    <xsl:text>var</xsl:text>
-    <xsl:value-of select="translate(@Name,'@', '_')" />
+    <xsl:variable name="variable_name">
+      <xsl:if test="ancestor::VariableTableReference">
+        <xsl:text>tmp_</xsl:text>
+      </xsl:if>
+      <xsl:text>var</xsl:text>
+      <xsl:value-of select="translate(@Name,'@', '_')" />
+    </xsl:variable>
+    <xsl:value-of select="ms2pg:QuoteName($variable_name)"/>
   </xsl:template>
   
   <xsl:template match="Parameters">
@@ -467,7 +511,13 @@
         <xsl:text>pg_backend_pid()</xsl:text>
       </xsl:when>
       <xsl:when test="ms2pg:ToLower(@Name)='@@servername'">
-        <xsl:text>inet_server_addr()</xsl:text>
+        <xsl:text>CAST (inet_server_addr() AS VARCHAR)</xsl:text>
+      </xsl:when>
+      <xsl:when test="ms2pg:ToLower(@Name)='@@trancount'">
+        <xsl:text>1/*trancount*/</xsl:text>
+      </xsl:when>
+      <xsl:when test="ms2pg:ToLower(@Name)='@@rowcount'">
+        <xsl:text>pg_affected_rows()</xsl:text>
       </xsl:when>
       <xsl:otherwise>
         <xsl:text>/*!UNKNOWN! GLOBAL VARIABLE </xsl:text>
@@ -489,6 +539,16 @@
         </xsl:if>
         <xsl:apply-templates select="."/>
       </xsl:for-each>
+      <xsl:text>)</xsl:text>
+    </xsl:template>
+    
+    <xsl:template match="RealLiteral">
+      <xsl:value-of select="@Value"/>
+    </xsl:template>
+
+    <xsl:template match="LeftFunctionCall">
+      <xsl:text>LEFT (</xsl:text>
+      <xsl:apply-templates select="Parameters"/>
       <xsl:text>)</xsl:text>
     </xsl:template>
 </xsl:stylesheet>

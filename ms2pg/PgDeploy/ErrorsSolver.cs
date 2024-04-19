@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Data.SqlClient;
 using Microsoft.SqlServer.TransactSql.ScriptDom;
+using ms2pg.PgScripter;
 using Npgsql;
 
 namespace ms2pg.PgDeploy
@@ -114,19 +115,65 @@ namespace ms2pg.PgDeploy
                         {
                             errorPosition += 4;
                         }
-                        beforeErrorBatchPart = batch.Substring(0, errorPosition);
-                        afterErrorBatchPart = batch.Substring(errorPosition);
+                        beforeErrorBatchPart = batch.Substring(0, errorPosition - 1);
+                        afterErrorBatchPart = batch.Substring(errorPosition - 1);
 
-                        var match = Regex.Match(afterErrorBatchPart, @"^[ \t\r\n]*(\d+|[0-9a-zA-Z_#]+([ \t\r\n]*\.+[ \t\r\n]*[0-9a-zA-Z_#]+)*)");
+                        var match = Regex.Match(afterErrorBatchPart, @"^([+\-=><][ \t\r\n]*(\d+|[0-9a-zA-Z_#]+([ \t\r\n]*\.+[ \t\r\n]*[0-9a-zA-Z_#]+)*)|[Ii][Nn])");
 
                         if (match.Success)
                         {
+                            var matchIn = Regex.Match(match.Value, "^[ \t\r\n]*[Ii][Nn]");
+                            if (matchIn.Success)
+                            {
+                                var matchLeftSide = Regex.Match(new string (beforeErrorBatchPart.Reverse().ToArray()), @"^[ \t\r\n]*(\d+|[0-9a-zA-Z_#]+([ \t\r\n]*\.+[ \t\r\n]*[0-9a-zA-Z_#]+)*)");                    
+                                fixedBatch = beforeErrorBatchPart.Substring(0, beforeErrorBatchPart.Length - matchLeftSide.Length)
+                                            + " CAST("
+                                            + beforeErrorBatchPart.Substring(beforeErrorBatchPart.Length - matchLeftSide.Length, matchLeftSide.Length)
+                                            + " AS INT) "
+                                            + afterErrorBatchPart;
+                            }
+                            else 
+                            {
+                                fixedBatch = beforeErrorBatchPart
+                                            + afterErrorBatchPart.Substring(0, 1)
+                                            + " CAST("
+                                            + afterErrorBatchPart.Substring(1, match.Length - 1)
+                                            + " AS VARCHAR) "
+                                            + afterErrorBatchPart.Substring(match.Length);
+                            }
+                        }
+                    }
+                    else if (Regex.IsMatch(errorMessage!, "boolean [=] integer"))
+                    {
+                        if (batch.Substring(errorPosition - 1).StartsWith("WHEN"))
+                        {
+                            errorPosition += 4;
+                        }
+                        beforeErrorBatchPart = batch.Substring(0, errorPosition - 1);
+                        afterErrorBatchPart = batch.Substring(errorPosition - 1);
 
+                        var match = Regex.Match(afterErrorBatchPart, @"^([+\-=><][ \t\r\n]*(\d+|[0-9a-zA-Z_#]+([ \t\r\n]*\.+[ \t\r\n]*[0-9a-zA-Z_#]+)*))");
+
+                        if (match.Success)
+                        {
+                           
                             fixedBatch = beforeErrorBatchPart
-                                        + " CAST("
-                                        + afterErrorBatchPart.Substring(0, match.Length)
-                                        + " AS VARCHAR) "
+                                        + afterErrorBatchPart.Substring(0, 1)
+                                        + " CASE WHEN "
+                                        + afterErrorBatchPart.Substring(1, match.Length - 1)
+                                        + " = 0 THEN FALSE ELSE TRUE END "
                                         + afterErrorBatchPart.Substring(match.Length);
+                        }
+                        else 
+                        {
+                            var beforeMatch = Regex.Match(new string(beforeErrorBatchPart.Reverse().ToArray()), @"^([ \t\r\n]*(\d+|[0-9a-zA-Z_#]+([ \t\r\n]*\.+[ \t\r\n]*[0-9a-zA-Z_#]+)*))");
+                            if (beforeMatch.Success)
+                            {
+                                fixedBatch = beforeErrorBatchPart.Substring(0, beforeErrorBatchPart.Length - beforeMatch.Length)
+                                           + "CASE WHEN " + beforeErrorBatchPart.Substring(beforeErrorBatchPart.Length - beforeMatch.Length, beforeMatch.Length - 1)
+                                           + " THEN 1 ELSE 0 END"
+                                           + afterErrorBatchPart;
+                            }   
                         }
                     }
                     break;
@@ -159,6 +206,17 @@ namespace ms2pg.PgDeploy
                         if (match.Success)
                         {
                             fixedBatch = beforeErrorBatchPart + "CAST (" + match.Value + " AS TIMESTAMP) "
+                                        + afterErrorBatchPart.Substring(match.Length);
+                        }
+                    }
+                    else if (Regex.IsMatch(errorMessage!, "integer .+ character varying"))
+                    {
+                        beforeErrorBatchPart = batch.Substring(0, errorPosition - 1);
+                        afterErrorBatchPart = batch.Substring(errorPosition - 1);
+                        var match = Regex.Match(afterErrorBatchPart, @"^[ \t\r\n]*(\d+|[0-9a-zA-Z_#]+([ \t\r\n]*\.+[ \t\r\n]*[0-9a-zA-Z_#]+)*)");
+                        if (match.Success)
+                        {
+                            fixedBatch = beforeErrorBatchPart + "CAST (" + match.Value + " AS INT) "
                                         + afterErrorBatchPart.Substring(match.Length);
                         }
                     }
@@ -198,6 +256,22 @@ namespace ms2pg.PgDeploy
                         if (splitted.Count() == 3) {
                             fixedBatch = splitted[0] + "INT" + splitted[1] + "SERIAL" + splitted[2];
                         }
+                    }
+                    break;
+                case "42809" :
+                    var xsltExtensions = new XsltExtensions(config);
+                    var drop_function = $"DROP FUNCTION IF EXISTS {Path.GetFileNameWithoutExtension(fileName).Split(".")[0]}.{xsltExtensions.QuoteName(Path.GetFileNameWithoutExtension(fileName).Split(".")[1])};\n";
+                    if (!batch.Contains(drop_function))
+                    {
+                        fixedBatch = drop_function + $"DROP PROCEDURE IF EXISTS {Path.GetFileNameWithoutExtension(fileName).Split(".")[0]}.{xsltExtensions.QuoteName(Path.GetFileNameWithoutExtension(fileName).Split(".")[1])};\n\n{batch}";
+                    }
+                    break;
+                case "42P13" :
+                    xsltExtensions = new XsltExtensions(config);
+                    drop_function = $"DROP FUNCTION IF EXISTS {Path.GetFileNameWithoutExtension(fileName).Split(".")[0]}.{xsltExtensions.QuoteName(Path.GetFileNameWithoutExtension(fileName).Split(".")[1])};\n";
+                    if (!batch.Contains(drop_function))
+                    {
+                        fixedBatch = drop_function + $"DROP PROCEDURE IF EXISTS {Path.GetFileNameWithoutExtension(fileName).Split(".")[0]}.{xsltExtensions.QuoteName(Path.GetFileNameWithoutExtension(fileName).Split(".")[1])};\n\n{batch}";
                     }
                     break;
             }

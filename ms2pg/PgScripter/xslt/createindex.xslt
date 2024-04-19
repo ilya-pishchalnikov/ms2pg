@@ -54,7 +54,7 @@
     <xsl:if test="FilterPredicate/node()">
       <xsl:call-template name="_LineBreak" />
       <xsl:text>WHERE </xsl:text>
-      <xsl:apply-templates select="FilterPredicate/Expression" />
+      <xsl:apply-templates select="FilterPredicate/*" />
     </xsl:if>
     <xsl:call-template name="_IndentDec" />
   </xsl:template>

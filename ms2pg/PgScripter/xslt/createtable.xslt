@@ -7,8 +7,12 @@
   <xsl:import href="settings.xslt"/>
 
    <!-- Create table statement -->
-  <xsl:template match="CreateTableStatement">
-    <xsl:text>CREATE TABLE </xsl:text>
+  <xsl:template match="CreateTableStatement">  
+    <xsl:text>CREATE </xsl:text>
+    <xsl:if test="ms2pg:StartsWith(SchemaObjectName/BaseIdentifier/Identifier/@Value, '#')">
+      <xsl:text>TEMP </xsl:text>
+    </xsl:if>
+    <xsl:text>TABLE </xsl:text>
     <xsl:if test = "$create_table_if_not_exists">IF NOT EXISTS </xsl:if>
     <xsl:apply-templates select="SchemaObjectName"/>
     <xsl:apply-templates select="Definition/TableDefinition" />
@@ -42,9 +46,27 @@
   <xsl:template match="ColumnDefinition">
     <xsl:value-of select="ms2pg:QuoteName(ColumnIdentifier/Identifier/@Value)" />
     <xsl:text> </xsl:text>
-    <xsl:apply-templates select="DataType"/>
+    <xsl:choose>
+      <xsl:when test="ComputedColumnExpression">
+        <xsl:variable name="table_name">
+          <xsl:apply-templates select="ancestor::*/SchemaObjectName/Identifiers"/>
+        </xsl:variable>
+        <xsl:variable name="column_name" select="ColumnIdentifier/Identifier/@Value"/>
+        <xsl:variable name="column_datatype" select="ms2pg:GetComputedColumnType($table_name, $column_name)"/>
+        <xsl:value-of select="$column_datatype"/>
+        <xsl:text> GENERATED ALWAYS AS (CAST (</xsl:text>
+        <xsl:apply-templates select="ComputedColumnExpression/*"/>
+        <xsl:text> AS </xsl:text>
+        <xsl:value-of select="$column_datatype"/>
+        <xsl:text>)) STORED</xsl:text>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:apply-templates select="DataType"/>
+        <xsl:text> </xsl:text>
+        <xsl:apply-templates select="Constraints"/>        
+      </xsl:otherwise>
+    </xsl:choose>
     <xsl:text> </xsl:text>
-    <xsl:apply-templates select="Constraints"/>
   </xsl:template>
 
   <!-- Indexed column -->
@@ -78,6 +100,7 @@
           <xsl:text>*/</xsl:text>
         </xsl:otherwise>
       </xsl:choose>
+      <xsl:text> </xsl:text>
     </xsl:for-each>
   </xsl:template>
 
