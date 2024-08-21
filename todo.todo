@@ -1,9 +1,3 @@
 /***** Using ToDo+ Extension by Spabio Spampinato ******/
-xslt:
-    - alter table add/alter column syntax support
-    - alter table add index syntax support
-    - with cte support
-    - raiserror optional parameters support
-
 
     
