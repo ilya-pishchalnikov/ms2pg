@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ms2pg-config>
-  <property name="ms-connection-string"                value="Server=localhost;Database=quotations;Integrated Security=true;Trust Server Certificate=true"/>
-  <property name="pg-connection-string"                value="User ID=postgres;Password=postgres;Host=127.0.0.1;Port=50000;Database=quotations;"/>
+  <property name="ms-connection-string"                value="Server=localhost;Database=qt;Integrated Security=true;Trust Server Certificate=true"/>
+  <property name="pg-connection-string"                value="User ID=postgres;Password=postgres;Host=127.0.0.1;Port=5432;Database=qt;"/>
   <property name="ms-script-dir"                       value="qt/ms"/>
   <property name="ms-parsed-dir"                       value="qt/ms"/>
   <property name="pg-script-dir"                       value="qt/pg"/>
