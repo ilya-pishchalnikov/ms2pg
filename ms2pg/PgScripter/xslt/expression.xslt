@@ -502,6 +502,28 @@
     </xsl:if>
   </xsl:template>
 
+  <xsl:template match="VariableMethodCallTableReference">
+    <xsl:text>(select unnest(xpath(</xsl:text>
+    <xsl:apply-templates select="Parameters"/>
+    <xsl:text>, </xsl:text>
+    <xsl:apply-templates select="Variable"/>
+    <xsl:text>)))</xsl:text>
+    <xsl:if test="Alias">
+      <xsl:text> AS </xsl:text>
+      <xsl:apply-templates select="Alias/Identifier"/>
+    </xsl:if>
+    <xsl:if test="Columns">
+      <xsl:text>(</xsl:text>
+      <xsl:for-each select="Columns/*">
+        <xsl:if test="position() > 1">
+          <xsl:text>, </xsl:text>
+        </xsl:if>
+        <xsl:value-of select="./@Value"/>
+      </xsl:for-each>
+      <xsl:text>)</xsl:text>
+    </xsl:if>
+  </xsl:template>
+
   <xsl:template match="GlobalVariableExpression">
     <xsl:choose>
       <xsl:when test="ms2pg:ToLower(@Name)='@@fetch_status'">
@@ -550,5 +572,15 @@
       <xsl:text>LEFT (</xsl:text>
       <xsl:apply-templates select="Parameters"/>
       <xsl:text>)</xsl:text>
+    </xsl:template>
+
+    <xsl:template match="IIfCall">
+      <xsl:text>CASE WHEN </xsl:text>
+      <xsl:apply-templates select="Predicate"/>
+      <xsl:text> THEN </xsl:text>
+      <xsl:apply-templates select="ThenExpression/*"/>
+      <xsl:text> ELSE </xsl:text>
+      <xsl:apply-templates select="ElseExpression/*"/>
+      <xsl:text> END</xsl:text>
     </xsl:template>
 </xsl:stylesheet>

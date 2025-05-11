@@ -19,7 +19,7 @@ namespace ms2pg.MsParser
         /// Парсинг файлов .sql формата MS SQL и запись в файлы .xml
         /// </summary>
         /// <param name="baseDirectory">Путь по которому находятся файлы</param>
-        public static void ParseFiles(Config.Config config)
+        public static void ParseFiles(Config.ConfigProperties config)
         {
             var baseDirectory = config["ms-parsed-dir"];
 
@@ -48,7 +48,7 @@ namespace ms2pg.MsParser
         /// Парсинг sql файла 
         /// </summary>
         /// <param name="fileName"></param>
-        public static void ParseFile(string fileName, Config.Config config)
+        public static void ParseFile(string fileName, ConfigProperties config)
         {
             Console.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}\tparsing\t{fileName} => {Path.ChangeExtension(fileName, ".xml")}");
 
@@ -66,15 +66,30 @@ namespace ms2pg.MsParser
                 throw new ApplicationException ($"Errors while file parsing: \n {parseErrorsString}");
             }
             
-            var serializer = new ms2pg.MsParser.XmlSerializer ();
+            var serializer = new XmlSerializer ();
             serializer.IsDebugMessages = config.ContainsKey("is-debug-messages") && config["is-debug-messages"] == "true";
-            serializer.IsEnumerableItemNameAsParentWithoutS = config["is-xml-enumerables-name-like-parent"] == "true";
-            foreach (var excludedProperty in config["excluded-properties"].Split(","))
+            serializer.IsEnumerableItemNameAsParentWithoutS = config.ContainsKey("is-xml-enumerables-name-like-parent") 
+                && config["is-xml-enumerables-name-like-parent"] == "true";
+
+            if (config.ContainsKey("excluded-properties"))
             {
-                serializer.ExcludedProperties.Add(excludedProperty);
+                foreach (var excludedProperty in config["excluded-properties"].Split(","))
+                {
+                    serializer.ExcludedProperties.Add(excludedProperty);
+                }
             }
 
             var parseResultXml = serializer.Serialize(parseResult);
+
+            var tokenStream = parseResultXml.SelectSingleNode("//ScriptTokenStream[*]");
+
+            if (tokenStream != null)
+            {
+                parseResultXml.DocumentElement?.RemoveChild(parseResultXml.SelectSingleNode("TSqlScript/ScriptTokenStream")!);
+                parseResultXml.DocumentElement?.AppendChild(tokenStream);
+            }
+
+
 
             var elementsWithTokens = parseResultXml.SelectNodes("//*[@FirstTokenIndex]");
 

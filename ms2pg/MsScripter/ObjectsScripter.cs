@@ -18,7 +18,7 @@ namespace ms2pg.MsScripter
         /// Scripts all objects of database. 
         /// </summary>
         /// <param name="config">Application configuration</param>
-        public static void ScriptAllObjects (Config.Config config)
+        public static void ScriptAllObjects (Config.ConfigProperties config)
         {
             using var connection = new SqlConnection(config["ms-connection-string"]);
             {

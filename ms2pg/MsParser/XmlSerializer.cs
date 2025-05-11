@@ -60,7 +60,7 @@ namespace ms2pg.MsParser
             XmlElement rootXmlElement = null!; 
             if (IsTypeAsElementName)
             {
-                rootXmlElement = xmlResult.CreateElement(obj.GetType().Name);
+                rootXmlElement = xmlResult.CreateElement(obj.GetType().Name.Replace("`", "_"));
             }
             else
             {

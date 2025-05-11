@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <None Remove="config.xml" />
+    <None Remove="MsFormatter\xslt\common.xslt" />
     <None Remove="PgScripter\xslt\altertable.xslt" />
     <None Remove="PgScripter\xslt\common.xslt" />
     <None Remove="PgScripter\xslt\createindex.xslt" />
@@ -27,6 +28,15 @@
 
   <ItemGroup>
     <EmbeddedResource Include="config.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MsFormatter\xslt\common.xslt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MsFormatter\xslt\msfmt.xslt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MsFormatter\xslt\settings.xslt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="PgScripter\xslt\altertable.xslt">

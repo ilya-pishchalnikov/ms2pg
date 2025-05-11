@@ -7,7 +7,7 @@ namespace ms2pg.MsScripter
     /// </summary>
     internal static class ObjectsCollectionScriptToFile
     {
-        public static void ScriptToFiles(this SchemaCollectionBase objectsCollection, string folderName, bool isOwerwrite, Config.Config config)
+        public static void ScriptToFiles(this SchemaCollectionBase objectsCollection, string folderName, bool isOwerwrite, Config.ConfigProperties config)
         {
             var objectTypeName =
                 (from method in objectsCollection.GetType().GetMethods()
@@ -59,7 +59,7 @@ namespace ms2pg.MsScripter
         }
 
 
-        public static void ScriptToFiles(this SimpleObjectCollectionBase objectsCollection, string folderName, bool isOwerwrite, Config.Config config)
+        public static void ScriptToFiles(this SimpleObjectCollectionBase objectsCollection, string folderName, bool isOwerwrite, Config.ConfigProperties config)
         {
             var objectTypeName =
                 (from method in objectsCollection.GetType().GetMethods()

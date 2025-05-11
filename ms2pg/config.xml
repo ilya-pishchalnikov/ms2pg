@@ -1,17 +1,63 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ms2pg-config>
-  <property name="ms-connection-string"                value="Server=localhost;Database=qt;Integrated Security=true;Trust Server Certificate=true"/>
-  <property name="pg-connection-string"                value="User ID=postgres;Password=postgres;Host=127.0.0.1;Port=5432;Database=qt;"/>
-  <property name="ms-script-dir"                       value="qt/ms"/>
-  <property name="ms-parsed-dir"                       value="qt/ms"/>
-  <property name="pg-script-dir"                       value="qt/pg"/>
-  <property name="xslt-file-name"                      value="PgScripter/xslt/ms2pg.xslt"/>
-  <property name="pg-deploy-dir-sequence"              value=".pre,Schema,Table,View,UserDefinedFunction,StoredProcedure"/>
-  <property name="is-debug-messages"                   value="false"/>
-  <property name="is-xml-enumerables-name-like-parent" value="true"/>
-  <property name="excluded-properties"                 value="ScriptTokenStream"/>
-  <property name="deploy-retry-count"                  value="100000"/>
-  <property name="empty-ms-folder-exclude"             value=""/>
-  <property name="empty-pg-folder-exclude"             value="\.pre\"/>
-  <property name="file-name-contains-filters"          value=".fAccrualTypeByPortfolio." />
+	<common>
+		<property name="ms-connection-string"                value="Server=localhost;Database=qt;Integrated Security=true;Trust Server Certificate=true"/>
+		<property name="pg-connection-string"                value="User ID=postgres;Password=postgres;Host=127.0.0.1;Port=5432;Database=qt;"/>
+		<property name="ms-script-dir"                       value="qt/ms"/>
+		<property name="ms-parsed-dir"                       value="qt/ms"/>
+		<property name="pg-script-dir"                       value="qt/pg"/>
+		<property name="xslt-file-name"                      value="PgScripter/xslt/ms2pg.xslt"/>
+		<property name="pg-deploy-dir-sequence"              value=".pre,Schema,Table,View,UserDefinedFunction,StoredProcedure"/>
+		<property name="is-debug-messages"                   value="false"/>
+		<property name="is-xml-enumerables-name-like-parent" value="true"/>
+		<property name="deploy-retry-count"                  value="100000"/>
+		<property name="empty-ms-folder-exclude"             value=""/>
+		<property name="empty-pg-folder-exclude"             value="\.pre\"/>
+		<property name="file-name-contains-filters"          value=".pAccScontoList." />
+	</common>
+	<actions>
+		<!-- clear folders -->
+		<action type="clear-folder" name="clear ms-script-dir" enabled="false">
+			<property name="dir" property-value="ms-script-dir"/>
+			<property name="exclude" property-value="empty-ms-folder-exclude"/>
+		</action>
+		<action type="clear-folder" name="clear ms-parsed-dir" enabled="false">
+			<property name="dir" property-value="ms-parsed-dir"/>
+		</action>
+		<action type="clear-folder" name="clear pg-script-dir" enabled="false">
+			<property name="dir" property-value="pg-script-dir"/>
+			<property name="exclude" property-value="empty-pg-folder-exclude"/>
+		</action>
+		<action type="clear-folder" name="clear pg-script-dir" enabled="false">
+			<property name="dir" property-value="pg-script-dir"/>
+		</action>
+		<!-- script ms-sql -->
+		<action type="script-ms-sql" name="script-ms-sql" enabled="false">
+			<property name="ms-connection-string" property-value="ms-connection-string"/>
+			<property name="ms-script-dir" property-value="ms-script-dir"/>
+		</action>
+		<!-- parse ms-sql -->
+		<action type="parse-ms-sql" name="parse-ms-sql" enabled="true">
+			<property name="ms-parsed-dir" property-value="ms-parsed-dir"/>
+			<property name="ms-script-dir" property-value="ms-script-dir"/>
+			<!--property name="excluded-properties" value="Batches"/-->
+			<property name="filename-suffix" value="_tokens"/>
+		</action>
+		<!-- format MS SQL -->
+		<action type="format-ms-sql" name="format-ms-sql" enabled="true">
+			<property name="ms-parsed-dir" property-value="ms-parsed-dir"/>
+			<property name="ms-formatted-dir" value="qt/ms_formatted"/>
+			<property name="xslt-file-name" value="MsFormatter/xslt/msfmt.xslt"/>
+		</action>
+		<!-- script to Postgre SQL -->
+		<action type="script-pg-sql" name="script-pg-sql" enabled="false">
+			<property name="ms-parsed-dir" property-value="ms-parsed-dir"/>
+			<property name="pg-script-dir" property-value="pg-script-dir"/>
+		</action>
+		<!-- deploy Postgre SQL -->
+		<action type="deploy-pg-sql" name="deploy-pg-sql" enabled="false">
+			<property name="pg-deploy-dir-sequence" property-value="pg-deploy-dir-sequence"/>
+			<property name="deploy-retry-count" property-value="deploy-retry-count"/>
+		</action>
+	</actions>
 </ms2pg-config>

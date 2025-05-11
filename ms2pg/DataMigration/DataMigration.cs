@@ -13,7 +13,7 @@ namespace ms2pg.DataMigration
     public class DataMigration
     {
 
-        public static DataTable EnlistAllTables (Config.Config config)
+        public static DataTable EnlistAllTables (Config.ConfigProperties config)
         {
             var resultDataSet = new DataSet();
             var sql = File.ReadAllText("sqlscripts/TablesDependencies.sql");
@@ -31,7 +31,7 @@ namespace ms2pg.DataMigration
             return resultDataSet.Tables[0];
         }
 
-        public static void MigrateTableData (string tableName, Config.Config config)
+        public static void MigrateTableData (string tableName, Config.ConfigProperties config)
         {
             var connectionString = config["ms-connection-string"];
             using (var connection = new SqlConnection(connectionString))

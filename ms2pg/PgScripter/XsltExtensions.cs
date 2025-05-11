@@ -4,6 +4,8 @@ using System.Linq;
 using System.Security.Policy;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Xml;
+using System.Xml.XPath;
 using Microsoft.Data.SqlClient;
 using Microsoft.SqlServer.TransactSql.ScriptDom;
 
@@ -11,12 +13,12 @@ namespace ms2pg.PgScripter
 {
     public class XsltExtensions
     {
-        private Config.Config _Config;
+        private Config.ConfigProperties _Config;
 
         private static Dictionary<string, List<ProcedureResultSetColumn>> _ProcedureResultSets;
         private static Dictionary<string, Dictionary<string, string>> _ComputedColumnsTypes;
 
-        public XsltExtensions (Config.Config config)
+        public XsltExtensions (Config.ConfigProperties config)
         {
             _Config = config;
             if (XsltExtensions._ProcedureResultSets == null)
@@ -392,6 +394,20 @@ namespace ms2pg.PgScripter
                 }
             }
             return result;
+        }
+
+        public XPathNavigator SplitString (string str, string divider)
+        {
+            var doc = new XmlDocument();
+            var rootElement = doc.CreateElement("root");
+            doc.AppendChild(rootElement);
+            foreach (var substr in str.Split(divider))
+            {
+                var substrElement = rootElement.AppendChild(doc.CreateElement("element"));
+                substrElement.InnerText = substr;
+            }
+            return doc.CreateNavigator()!;
+
         }
     }
 }

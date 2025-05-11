@@ -1,24 +1,30 @@
-﻿
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using ms2pg.PgScripter;
 
-namespace ms2pg.PgScripter
+namespace ms2pg.MsFormatter
 {
-    internal class PgScripter
+    internal class MsFormatter
     {
+
         /// <summary>
         /// Script all files 
         /// </summary>
         /// <param name="config"></param>
-        public static void pgScript(Config.ConfigProperties config)
+        public static void msFormat(Config.ConfigProperties config)
         {
             var baseDirectory = config["ms-parsed-dir"];
-            var convertToDirectory = config["pg-script-dir"];
+            var convertToDirectory = config["ms-formatted-dir"];
             var xsltFileName = config["xslt-file-name"];
             var files = Directory.GetFiles(baseDirectory, "*.xml", SearchOption.AllDirectories)
                 .Select(x =>
                 new
                 {
                     XmlFileName = x,
-                    OutputFileName = Path.Combine(convertToDirectory, Path.GetRelativePath(baseDirectory, Path.ChangeExtension(x, "sql")))                    
+                    OutputFileName = Path.Combine(convertToDirectory, Path.GetRelativePath(baseDirectory, Path.ChangeExtension(x, "sql")))
                 }).ToList();
 
             files.Sort((x, y) => x.OutputFileName.CompareTo(y.OutputFileName));
@@ -36,7 +42,7 @@ namespace ms2pg.PgScripter
             {
                 if (filesFilters.Count == 0 || filesFilters.Where(x => file.OutputFileName.Contains(x)).Count() > 0)
                 {
-                    Console.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}\tgenerating sql\t{file.XmlFileName} => {file.OutputFileName}");
+                    Console.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}\tformatting sql\t{file.XmlFileName} => {file.OutputFileName}");
                     var OutputDirectoryName = Path.GetDirectoryName(file.OutputFileName);
                     if (!Directory.Exists(OutputDirectoryName)) { Directory.CreateDirectory(OutputDirectoryName!); }
                     MsParsedToPgXsltTransform.GenerateScript(file.XmlFileName, xsltFileName, file.OutputFileName, config);

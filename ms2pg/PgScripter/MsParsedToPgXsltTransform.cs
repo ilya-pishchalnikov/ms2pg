@@ -24,7 +24,7 @@ namespace ms2pg.PgScripter
         /// <param name="outputFileName"></param>
         /// <param name="config"></param>
         /// <returns></returns>
-        public static void GenerateScript(string xmlFileName, string xsltFileName, string outputFileName, Config.Config config)
+        public static void GenerateScript(string xmlFileName, string xsltFileName, string outputFileName, Config.ConfigProperties config)
         {
             try 
             {

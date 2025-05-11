@@ -13,7 +13,7 @@ namespace ms2pg.PgDeploy
     public static class ErrorsSolver
     {
         public enum SolveResult {Solved, Unsolved, Unsolvable};
-        public static SolveResult Solve(Npgsql.PostgresException exception, string[] batches, int batchIndex, string fileName, Config.Config config)
+        public static SolveResult Solve(Npgsql.PostgresException exception, string[] batches, int batchIndex, string fileName, Config.ConfigProperties config)
         {
             var batch = batches[batchIndex];
             string fixedBatch = null;

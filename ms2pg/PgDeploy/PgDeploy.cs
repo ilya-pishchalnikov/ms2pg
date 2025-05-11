@@ -52,7 +52,7 @@ namespace ms2pg.PgDeploy
         /// </summary>
         /// <param name="config">Application configuration dictionary</param>
         /// <exception cref="Exception"></exception>
-        public static void Deploy(Config.Config config)
+        public static void Deploy(Config.ConfigProperties config)
         {
             var baseDirectory = config["pg-script-dir"];
             var scriptDirSequence = config["pg-deploy-dir-sequence"].Split(",");
