@@ -364,3 +364,6 @@ FodyWeavers.xsd
 
 # xml and sql files
 script/
+
+# config
+config.xml
