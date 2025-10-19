@@ -28,7 +28,7 @@ namespace ms2pg.PgScripter
                 Console.WriteLine("caching...");
 
                 var connectionString = config["ms-connection-string"];
-                var filter = config["file-name-contains-filters"];
+                var filter = config.ContainsKey("file-name-contains-filters") ? config["file-name-contains-filters"] : "";
 
                 var sql = "select  object_schema_name(o.object_id) + '.' + o.name as object_name\n";
                 sql += "        , r.column_ordinal\n";
@@ -292,7 +292,7 @@ namespace ms2pg.PgScripter
             try
             {
                 var procedureFields = _ProcedureResultSets[procedureName];
-                return procedureFields.Select(procedureField => $"{procedureField.ColumnName} {procedureField.DataType}").Aggregate((x, y) => x + ",\n" + y);
+                return procedureFields.Select(procedureField => $"{QuoteName(procedureField.ColumnName)} {procedureField.DataType}").Aggregate((x, y) => x + ",\n" + y);
             }
             catch (Exception ex)
             {
@@ -305,7 +305,7 @@ namespace ms2pg.PgScripter
             try
             {
                 var procedureFields = _ProcedureResultSets[procedureName];
-                return procedureFields.Select(procedureField => $"CAST ({procedureField.ColumnName} AS {procedureField.DataType})").Aggregate((x, y) => x + ",\n" + y);
+                return procedureFields.Select(procedureField => $"CAST ({QuoteName(procedureField.ColumnName)} AS {procedureField.DataType})").Aggregate((x, y) => x + ",\n" + y);
             }
             catch (Exception ex)
             {

@@ -311,7 +311,7 @@
   </xsl:template>
 
   <xsl:template match="DeclareCursorStatement">
-    <xsl:text>/* Cursor declaration moved to begin of execution bloc */</xsl:text>
+    <xsl:text>/* Cursor declaration moved to begin of execution block */</xsl:text>
   </xsl:template>
   
   <xsl:template match="ReturnStatement">

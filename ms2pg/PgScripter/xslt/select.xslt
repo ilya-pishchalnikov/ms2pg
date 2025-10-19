@@ -41,6 +41,9 @@
       <xsl:when test="ancestor::SelectFunctionReturnType">
         <xsl:apply-templates select="QueryExpression" />
       </xsl:when>
+      <xsl:when test="ancestor::CursorDefinition">
+        <xsl:apply-templates select="QueryExpression" />
+      </xsl:when>
       <xsl:otherwise>
         <xsl:apply-templates select="QueryExpression" />
         <xsl:call-template name="_EndOfStatement" />
