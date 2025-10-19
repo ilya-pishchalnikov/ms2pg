@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.SqlServer.TransactSql.ScriptDom;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -8,6 +9,7 @@ using System.Xml;
 
 namespace ms2pg.Config
 {
+    internal enum OnErrorAction { Raise, Suppress }
     internal class Config
     {
         public ConfigProperties CommonProperties;
@@ -56,7 +58,9 @@ namespace ms2pg.Config
                             throw new ArgumentException($"Unknown type {xmlAction.Attributes!["type"]!.Value.ToString()}");
                     }
                     var enabled = xmlAction.Attributes["enabled"]?.Value.ToString() == "true";
-                    Actions.Add(new ConfigAction(xmlAction.Attributes!["name"]!.Value.ToString(), actionConfigProperties, configActionType, enabled));
+                    var onErrorAction = xmlAction.Attributes["on-error"]?.Value.ToString() == "suppress" ? OnErrorAction.Suppress : OnErrorAction.Raise;
+
+                    Actions.Add(new ConfigAction(xmlAction.Attributes!["name"]!.Value.ToString(), actionConfigProperties, configActionType, enabled, onErrorAction));
                 }
             }
         }
