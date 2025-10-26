@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.XPath;
 using Microsoft.Data.SqlClient;
+using Microsoft.SqlServer.Management.Sdk.Sfc;
+using Microsoft.SqlServer.Management.Smo;
 using Microsoft.SqlServer.TransactSql.ScriptDom;
 
 namespace ms2pg.PgScripter
@@ -17,6 +19,7 @@ namespace ms2pg.PgScripter
 
         private static Dictionary<string, List<ProcedureResultSetColumn>> _ProcedureResultSets;
         private static Dictionary<string, Dictionary<string, string>> _ComputedColumnsTypes;
+        private static Dictionary<string, SqlProcedure> _Procedures;
 
         public XsltExtensions (Config.ConfigProperties config)
         {
@@ -143,7 +146,76 @@ namespace ms2pg.PgScripter
                 }                
             }
 
+            if (XsltExtensions._Procedures == null)
+            {
+                XsltExtensions._Procedures = new Dictionary<string, SqlProcedure> ();
+                Console.WriteLine("caching procedures...");
+                var sql = string.Empty;
+                sql += "select\n";
+                sql += "\n";
+                sql += "      object_schema_name(p.object_id) + '.' + object_name(p.object_id) as procedure_name\n";
+                sql += "	, p.parameter_id\n";
+                sql += "	, stuff(p.name, 1, 1, '') as parameter_name\n";
+                sql += "    , case t.name\n";
+                sql += "          when 'int' then 'INT'\n";
+                sql += "          when 'binary' then 'BYTEA'\n";
+                sql += "          when 'varbinary' then 'BYTEA'\n";
+                sql += "          when 'numeric' then concat('NUMERIC (', p.[precision], ',', p.scale, ')')\n";
+                sql += "          when 'decimal' then concat('NUMERIC (', p.[precision], ',', p.scale, ')')\n";
+                sql += "          when 'varchar' then concat('VARCHAR', iif(p.max_length > 0, '(' + cast(p.max_length as varchar) + ')', ''))\n";
+                sql += "          when 'nvarchar' then concat('VARCHAR', iif(p.max_length > 0, cast(p.max_length as varchar) + ')', ''))\n";
+                sql += "          when 'char' then concat('CHAR', iif(p.max_length > 0, '(' + cast(p.max_length as varchar) + ')', ''))\n";
+                sql += "          when 'nchar' then concat('CHAR', iif(p.max_length > 0, '(' + cast(p.max_length as varchar) + ')', ''))\n";
+                sql += "          when 'sysname' then 'VARCHAR(128)'\n";
+                sql += "          when 'image' then 'BYTEA'\n";
+                sql += "          when 'text' then 'TEXT'\n";
+                sql += "          when 'ntext' then 'TEXT'\n";
+                sql += "          when 'uniqueidentifier' then 'BYTEA'\n";
+                sql += "          when 'date' then 'TIMESTAMP'\n";
+                sql += "          when 'datetime' then 'TIMESTAMP'\n";
+                sql += "          when 'datetime2' then 'TIMESTAMP'\n";
+                sql += "          when 'datetimeoffset' then 'TIMESTAMP'\n";
+                sql += "          when 'smalldatetime' then 'TIMESTAMP'\n";
+                sql += "          when 'tinyint' then 'INT2'\n";
+                sql += "          when 'smallint' then 'INT2'\n";
+                sql += "          when 'real' then 'FLOAT'\n";
+                sql += "          when 'float' then 'FLOAT'\n";
+                sql += "          when 'money' then 'DECIMAL(19, 4)'\n";
+                sql += "          when 'smallmoney' then 'DECIMAL(19, 4)'\n";
+                sql += "          when 'bit' then 'INT2'\n";
+                sql += "          when 'bigint' then 'BIGINT'\n";
+                sql += "          else upper(t.name)\n";
+                sql += "      end as parameter_type\n";
+                sql += "	, p.is_output as parameter_is_output\n";
+                sql += "from sys.parameters p\n";
+                sql += "inner join sys.types t on t.system_type_id = p.system_type_id and t.user_type_id = p.user_type_id\n";
+                sql += "where p.parameter_id > 0\n";
+                sql += "order by procedure_name, p.parameter_id\n";
 
+                var connectionString = config["ms-connection-string"];
+                using (var connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+                    using (var command = new SqlCommand(sql, connection))
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            var procedureName = (string)reader[0];
+                            var parameterId = (int)reader[1];
+                            var parameterName = (string)reader[2];
+                            var parameterType = (string)reader[3];
+                            var parameterIsOutput = (bool)reader[4];
+                            if (!XsltExtensions._Procedures.ContainsKey(procedureName.ToLower()))
+                            {
+                                XsltExtensions._Procedures.Add(procedureName.ToLower(), new SqlProcedure(procedureName));
+
+                            }
+                            XsltExtensions._Procedures[procedureName.ToLower()].Parameters.Add(new SqlProcedureParameter(parameterName, parameterType, parameterId, parameterIsOutput));
+                        }
+                    }
+                }
+            }
         }
 
         private string[] _Keywords = new string[] {
@@ -409,5 +481,186 @@ namespace ms2pg.PgScripter
             return doc.CreateNavigator()!;
 
         }
+
+
+        public string GetVariablesForOutputParameters(XPathNodeIterator proceduresIterator)
+        {
+            var varibalesDefinition = "";
+            var procedures = new HashSet<string>();
+            while (proceduresIterator.MoveNext())
+            {
+                XPathNavigator? procedureNavigator = proceduresIterator.Current;
+
+                var schemaName = procedureNavigator.SelectSingleNode("ProcedureReference/ProcedureReferenceName/ProcedureReference/Name/SchemaObjectName/SchemaIdentifier/Identifier")?.GetAttribute("Value", "");
+                var objectName = procedureNavigator.SelectSingleNode("ProcedureReference/ProcedureReferenceName/ProcedureReference/Name/SchemaObjectName/BaseIdentifier/Identifier")?.GetAttribute("Value", "");
+
+                var procedureName = $"{schemaName}.{objectName}";
+                if (XsltExtensions._Procedures.ContainsKey(procedureName.ToLower()) && !procedures.Contains(procedureName.ToLower()))
+                {
+                    procedures.Add(procedureName.ToLower());
+                    var procedure = XsltExtensions._Procedures[procedureName.ToLower()];
+                    int parameterId = 0;
+
+                    var parametersIterator = procedureNavigator.Select("Parameters/*");
+
+                    while (parametersIterator.MoveNext())
+                    {
+                        XPathNavigator? current = parametersIterator.Current;
+
+                        if (current == null)
+                        {
+                            break;
+                        }
+
+                        string parameterName = current.GetAttribute("Variable", "");
+                        string isOutput = current.GetAttribute("IsOutput", "");
+
+                        if (parameterName != null && parameterName != "")
+                        {
+                            parameterId = procedure.Parameters.Where(p => p.Name == parameterName).First().Id;
+                        }
+                        else
+                        {
+                            parameterId++;
+                        }
+
+                        SqlProcedureParameter parameter = procedure.Parameters[parameterId - 1];
+
+
+                        if (parameter.IsOutput && !(isOutput == "True"))
+                        {
+                            varibalesDefinition += QuoteName($"var_{procedure.Name.Replace(".", "_")}_{parameter.Name}_out");
+                            varibalesDefinition += $" {parameter.Type};\n";
+                        }
+                    }
+                }
+            }
+            return varibalesDefinition;
+        }
+
+        public string GetVariablesSetForOutputParameters(XPathNodeIterator procedureIterator)
+        {
+            var varibalesSet = "";
+            while (procedureIterator.MoveNext())
+            {
+                XPathNavigator? procedureNavigator = procedureIterator.Current;
+
+                var schemaName = procedureNavigator.SelectSingleNode("ProcedureReference/ProcedureReferenceName/ProcedureReference/Name/SchemaObjectName/SchemaIdentifier/Identifier")?.GetAttribute("Value", "");
+                var objectName = procedureNavigator.SelectSingleNode("ProcedureReference/ProcedureReferenceName/ProcedureReference/Name/SchemaObjectName/BaseIdentifier/Identifier")?.GetAttribute("Value", "");
+
+                var procedureName = $"{schemaName}.{objectName}";
+                if (XsltExtensions._Procedures.ContainsKey(procedureName.ToLower()))
+                {
+                    var procedure = XsltExtensions._Procedures[procedureName.ToLower()];
+                    int parameterId = 0;
+
+                    var parametersIterator = procedureNavigator.Select("Parameters/*");
+
+                    while (parametersIterator.MoveNext())
+                    {
+                        XPathNavigator? currentParameter = parametersIterator.Current;
+
+                        if (currentParameter == null)
+                        {
+                            break;
+                        }
+
+                        string parameterName = currentParameter.GetAttribute("Variable", "");
+                        string isOutput = currentParameter.GetAttribute("IsOutput", "");
+
+                        if (parameterName != null && parameterName != "")
+                        {
+                            parameterId = procedure.Parameters.Where(p => p.Name == parameterName).First().Id;
+                        }
+                        else
+                        {
+                            parameterId++;
+                        }
+
+                        SqlProcedureParameter parameter = procedure.Parameters[parameterId - 1];
+
+
+                        if (parameter.IsOutput && !(isOutput == "True"))
+                        {
+                            varibalesSet += QuoteName($"var_{procedure.Name.Replace(".", "_")}_{parameter.Name}_out");
+                            var parameterValueVariable = currentParameter.SelectSingleNode("ParameterValue/VariableReference");
+                            if (parameterValueVariable != null)
+                            {
+                                varibalesSet += $" := " + QuoteName($"var_{parameterValueVariable.GetAttribute("Name","").Substring(1)}") + ";\n";
+                            } else
+                            {
+                                var parameterValueNull = currentParameter.SelectSingleNode("ParameterValue/NullLiteral");
+                                if (parameterValueNull != null)
+                                {
+                                    varibalesSet += $" := null;\n";
+                                }
+                                else
+                                {
+                                    varibalesSet += "/*UNKNOWN PARAMETER VALUE IN GetVariablesSetForOutputParameters*/\n";
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return varibalesSet;
+        }
+
+        public XPathNavigator? GetParameterValueNode(string procedureName, int parameterPosition, XPathNodeIterator parameterNameIterator, XPathNodeIterator parameterValueIterator)
+        {
+
+            var isOutputParameter = false;
+            var parameterName = "";
+            if (XsltExtensions._Procedures.ContainsKey(procedureName.ToLower()))
+            {
+                var procedure = XsltExtensions._Procedures[procedureName.ToLower()];
+
+                SqlProcedureParameter parameter = null;
+
+                if (parameterNameIterator != null)
+                {
+                    while (parameterNameIterator.MoveNext())
+                    {
+                        parameterName = parameterNameIterator.Current!.SelectSingleNode("VariableReference")!.GetAttribute("Name", "").Substring(1);
+                        parameter = procedure.Parameters.Where(p => p.Name == parameterName).First();
+                    }
+                    if (parameter == null)
+                    {
+                        parameter = procedure.Parameters[parameterPosition - 1];
+                    }
+                }
+                else
+                {
+                    parameter = procedure.Parameters[parameterPosition - 1];
+                }
+
+                isOutputParameter = parameter.IsOutput;
+                procedureName = procedure.Name;
+                parameterName = parameter.Name;
+            }
+
+            while (parameterValueIterator.MoveNext())
+            {
+                var currentParameterValue = parameterValueIterator.Current!;
+                var isOutput = currentParameterValue.SelectSingleNode("parent::*")!.GetAttribute("IsOutput", "");
+
+                if (isOutput == "False" && isOutputParameter)
+                {
+                    var parameterAssignVarName = QuoteName($"{procedureName.Replace(".", "_")}_{parameterName}_out");
+                    var doc = new XmlDocument();
+                    var parameterValueElement = doc.CreateElement("ParameterValue");
+                    var varElement = doc.CreateElement("VariableReference");
+                    varElement.SetAttribute("Name", $"@{parameterAssignVarName}");
+                    parameterValueElement.AppendChild(varElement);
+                    return parameterValueElement.CreateNavigator();
+                }
+                return currentParameterValue;
+            }
+
+            return null;
+
+        }
     }
+
+
 }

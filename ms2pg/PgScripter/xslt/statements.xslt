@@ -464,13 +464,14 @@
   <xsl:template match="ExecuteStatement">
     <xsl:apply-templates select="ExecuteSpecification"/>
   </xsl:template>
-  <xsl:template match="ExecuteSpecification">
+  <xsl:template match="ExecuteSpecification">    
     <xsl:choose>
       <xsl:when test="ExecutableEntity/ExecutableProcedureReference/ProcedureReference/ProcedureReferenceName/ProcedureReference/Name/SchemaObjectName/Identifiers">
         <xsl:variable name="procedure_name" >
           <xsl:apply-templates select="ExecutableEntity/ExecutableProcedureReference/ProcedureReference/ProcedureReferenceName/ProcedureReference/Name/SchemaObjectName/Identifiers"/>
         </xsl:variable>
         <xsl:if test="$procedure_name != 'sp_settriggerorder'">
+          <xsl:value-of select ="ms2pg:GetVariablesSetForOutputParameters(ExecutableEntity/ExecutableProcedureReference)"/>
           <xsl:choose>
             <xsl:when test="ms2pg:IsProcedureHasResultSet($procedure_name)">
               <xsl:text>SELECT * FROM </xsl:text>
@@ -495,7 +496,8 @@
               <xsl:apply-templates select="Variable"/>
               <xsl:text> => </xsl:text>
             </xsl:if>
-            <xsl:apply-templates select="ParameterValue/*"/>
+            <xsl:variable name="parameter_info" select="ms2pg:GetParameterValueNode($procedure_name, position(), Variable, *)" />
+            <xsl:apply-templates select="$parameter_info/*"/>
             <xsl:if test="@IsOutput='true'">
               <xsl:text> OUT</xsl:text>
             </xsl:if>

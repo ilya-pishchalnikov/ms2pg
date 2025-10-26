@@ -55,7 +55,12 @@
     <xsl:text>AS $$</xsl:text>  
     <xsl:call-template name="_LineBreak"></xsl:call-template>
     <xsl:text>#variable_conflict use_column</xsl:text>
-    <xsl:if test="//DeclareVariableElement|//DeclareCursorStatement">
+    
+    <xsl:variable name="output_parameters">
+      <xsl:value-of select="ms2pg:GetVariablesForOutputParameters(//ExecutableProcedureReference)" />
+    </xsl:variable>
+    
+    <xsl:if test="//DeclareVariableElement|//DeclareCursorStatement|*[string-length($output_parameters) > 0]">
       <xsl:call-template name="_LineBreak" />
       <xsl:call-template name="_IndentInc" />
       <xsl:text>DECLARE </xsl:text>
@@ -76,9 +81,11 @@
         <xsl:text>;</xsl:text>
         <xsl:call-template name="_LineBreak" />
       </xsl:for-each>
+      <xsl:value-of select="$output_parameters"/>
       <xsl:call-template name="_IndentDec" />
       <xsl:call-template name="_LineBreak" />
     </xsl:if>
+    
     <xsl:call-template name="_LineBreak" />
     <xsl:text>BEGIN</xsl:text>
     <xsl:call-template name="_IndentInc"></xsl:call-template>
